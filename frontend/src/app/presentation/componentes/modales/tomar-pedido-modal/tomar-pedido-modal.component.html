@@ -1,0 +1,131 @@
+<!-- MODAL DE TOMAR PEDIDO (ROL MESERO) -->
+<div class="modal-overlay fade-in" *ngIf="estaAbierto && mesa">
+  <div class="glass-modal order-modal">
+    <!-- Encabezado del Modal -->
+    <div class="modal-header">
+      <div>
+        <h3>Tomar Pedido - Mesa {{ mesa.numero }}</h3>
+        <p class="modal-subtitle">
+          Capacidad: {{ mesa.capacidad }} personas &bull; Sede: {{ nombreSucursal || ('Sede #' + (mesa.sucursalId || sucursalId)) }}
+        </p>
+      </div>
+      <button class="btn-close-modal" (click)="alCerrar()">&times;</button>
+    </div>
+
+    <!-- Cuerpo del Modal -->
+    <div class="modal-body order-modal-body">
+      <!-- Alertas de estado -->
+      <div class="alert alert-error" *ngIf="errorPedido">{{ errorPedido }}</div>
+      <div class="alert alert-success" *ngIf="exitoPedido">{{ exitoPedido }}</div>
+
+      <!-- Nombre o Referencia del Cliente -->
+      <div class="order-client-input-wrapper">
+        <label for="nombre-cliente">Nombre / Referencia del Cliente</label>
+        <input type="text" id="nombre-cliente" [(ngModel)]="nombreCliente" class="form-control"
+          placeholder="Ej: Familia Morales / Carlos Gómez" autofocus>
+      </div>
+
+      <div class="order-split-layout">
+        <!-- COLUMNA IZQUIERDA: CATÁLOGO DE PRODUCTOS -->
+        <div class="catalog-section">
+          <!-- Filtro de Búsqueda y Categorías -->
+          <div class="catalog-filters">
+            <div class="search-input-wrapper">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" class="search-icon">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input type="text" [(ngModel)]="busquedaProducto" class="search-input"
+                placeholder="Buscar plato o bebida...">
+            </div>
+
+            <div class="category-pills-scroll">
+              <button class="cat-pill" [class.active]="categoriaSeleccionadaId === null" (click)="seleccionarCategoria(null)">
+                Todos
+              </button>
+              <button class="cat-pill" *ngFor="let cat of categorias" [class.active]="categoriaSeleccionadaId === cat.id"
+                (click)="seleccionarCategoria(cat.id)">
+                {{ cat.nombre }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Cuadrícula de Productos -->
+          <div class="products-grid">
+            <div class="product-item-card" *ngFor="let prod of productosFiltrados" (click)="agregarAlCarrito(prod)">
+              <div class="product-item-info">
+                <span class="prod-badge" [class.kitchen]="prod.requiereCoccion"
+                  [class.direct]="!prod.requiereCoccion">
+                  {{ prod.requiereCoccion ? 'Cocina' : 'Bebida / Despacho' }}
+                </span>
+                <h4>{{ prod.nombre }}</h4>
+                <p class="prod-desc" *ngIf="prod.descripcion">{{ prod.descripcion }}</p>
+              </div>
+              <div class="product-item-footer">
+                <span class="prod-price">${{ prod.precio | number:'1.2-2' }}</span>
+                <button class="btn-add-item" title="Agregar">+ Agregar</button>
+              </div>
+            </div>
+
+            <div class="empty-catalog" *ngIf="productosFiltrados.length === 0">
+              <p>No se encontraron productos en esta categoría o búsqueda.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: CARRITO DE COMANDA -->
+        <div class="order-cart-section">
+          <div class="cart-header">
+            <h4>Comanda Actual</h4>
+            <span class="cart-badge">{{ cantidadItemsCarrito }} item(s)</span>
+          </div>
+
+          <div class="cart-items-list">
+            <div class="cart-empty" *ngIf="carritoPedido.length === 0">
+              <div class="empty-icon">🛒</div>
+              <p>Haz clic en los platos o bebidas del menú para agregarlos a la comanda.</p>
+            </div>
+
+            <div class="cart-item-row" *ngFor="let item of carritoPedido; let i = index">
+              <div class="cart-item-top">
+                <div class="cart-item-title">
+                  <strong>{{ item.producto.nombre }}</strong>
+                  <span class="cart-unit-price">${{ item.producto.precio | number:'1.2-2' }} c/u</span>
+                </div>
+                <div class="cart-item-subtotal">
+                  ${{ (item.producto.precio * item.cantidad) | number:'1.2-2' }}
+                </div>
+              </div>
+
+              <div class="cart-item-controls">
+                <div class="qty-control-group">
+                  <button class="btn-qty" (click)="actualizarCantidadCarrito(i, -1)">-</button>
+                  <span class="qty-val">{{ item.cantidad }}</span>
+                  <button class="btn-qty" (click)="actualizarCantidadCarrito(i, 1)">+</button>
+                </div>
+                <input type="text" [(ngModel)]="item.modificacion" class="cart-note-input"
+                  placeholder="Nota: sin hielo, bien frito, etc.">
+                <button class="btn-remove-item" (click)="eliminarDelCarrito(i)" title="Quitar">
+                  &times;
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="cart-footer">
+            <div class="cart-total-row">
+              <span>Total a Cobrar:</span>
+              <span class="cart-grand-total">${{ totalCarrito | number:'1.2-2' }}</span>
+            </div>
+            <button class="btn-submit-order" [disabled]="estaEnviandoPedido || carritoPedido.length === 0"
+              (click)="enviarPedido()">
+              <span *ngIf="!estaEnviandoPedido">🚀 Enviar Comanda a Cocina</span>
+              <span *ngIf="estaEnviandoPedido">Enviando pedido...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

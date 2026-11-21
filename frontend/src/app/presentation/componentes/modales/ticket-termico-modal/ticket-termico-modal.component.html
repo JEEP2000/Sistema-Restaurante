@@ -1,0 +1,73 @@
+<!-- MODAL DE PRE-CUENTA TICKET TÉRMICO -->
+<div class="modal-overlay fade-in" *ngIf="estaAbierto && pedido">
+  <div class="glass-modal ticket-preview-modal">
+    <div class="modal-header">
+      <h3>Impresión de Pre-cuenta</h3>
+      <button class="btn-close-modal" (click)="alCerrar()">&times;</button>
+    </div>
+
+    <div class="modal-body ticket-preview-body">
+      <!-- ÁREA IMPRIMIBLE DEL TICKET TÉRMICO -->
+      <div class="thermal-receipt" id="print-area">
+        <div class="receipt-header">
+          <h4 class="receipt-title">{{ (empresaNombre || 'RESTAURANTE') | uppercase }}</h4>
+          <p class="receipt-sub">{{ sucursalNombre || perfil?.sucursalNombre || 'Sede Principal' }}</p>
+          <p class="receipt-info-text" *ngIf="sucursalDireccion">{{ sucursalDireccion }}</p>
+          <p class="receipt-info-text" *ngIf="ruc">RUC: {{ ruc }}</p>
+          <div class="receipt-divider-dashed">================================</div>
+
+          <h5 class="receipt-precuenta-tag">*** PRE - CUENTA ***</h5>
+          <p class="receipt-meta">MESA: {{ pedido.mesaNumero }} &bull; PEDIDO: #{{ pedido.id }}</p>
+          <p class="receipt-meta">FECHA: {{ pedido.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</p>
+          <p class="receipt-meta">CLIENTE: {{ pedido.clienteNombre || 'Comensal' }}</p>
+          <p class="receipt-meta">ATIENDE: {{ pedido.meseroNombre || 'Mesero' }}</p>
+          <div class="receipt-divider-dashed">================================</div>
+        </div>
+
+        <div class="receipt-items-table">
+          <div class="receipt-col-headers">
+            <span class="col-cant">Cant</span>
+            <span class="col-desc">Descripción</span>
+            <span class="col-price">Total</span>
+          </div>
+          <div class="receipt-divider-dashed">--------------------------------</div>
+          <div class="receipt-row" *ngFor="let it of pedido.detalles">
+            <span class="col-cant">{{ it.cantidad }}</span>
+            <span class="col-desc">{{ it.productoNombre }}</span>
+            <span class="col-price">${{ it.subtotal | number:'1.2-2' }}</span>
+          </div>
+          <div class="receipt-divider-dashed">--------------------------------</div>
+        </div>
+
+        <div class="receipt-totals-section">
+          <div class="receipt-total-line">
+            <span>SUBTOTAL:</span>
+            <span>${{ ((pedido.total || 0) / 1.18) | number:'1.2-2' }}</span>
+          </div>
+          <div class="receipt-total-line">
+            <span>I.G.V. (18%):</span>
+            <span>${{ ((pedido.total || 0) - ((pedido.total || 0) / 1.18)) | number:'1.2-2' }}</span>
+          </div>
+          <div class="receipt-divider-dashed">================================</div>
+          <div class="receipt-total-line grand-total">
+            <strong>TOTAL A PAGAR:</strong>
+            <strong>${{ pedido.total | number:'1.2-2' }}</strong>
+          </div>
+          <div class="receipt-divider-dashed">================================</div>
+        </div>
+
+        <div class="receipt-footer">
+          <p class="receipt-disclaimer">*** NO VÁLIDO COMO COMPROBANTE DE PAGO ***</p>
+          <p class="receipt-thanks">¡Muchas gracias por su visita!</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-modal secundario" (click)="alCerrar()">Cerrar</button>
+      <button class="btn-modal" (click)="imprimirTicket()">
+        🖨️ Imprimir Ticket
+      </button>
+    </div>
+  </div>
+</div>

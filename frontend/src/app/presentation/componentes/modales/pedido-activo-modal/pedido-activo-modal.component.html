@@ -1,0 +1,287 @@
+<!-- MODAL DE PEDIDO ACTIVO / PRE-CUENTA (ROL MESERO Y ADMIN) -->
+<div class="modal-overlay fade-in" *ngIf="estaAbierto && mesa">
+  <div class="glass-modal active-order-modal">
+    <!-- Encabezado del Modal -->
+    <div class="modal-header">
+      <div>
+        <h3>Mesa {{ mesa.numero }} - Pedido #{{ pedidoActivo?.id ?? '...' }}</h3>
+        <p class="modal-subtitle">
+          Cliente: <strong>{{ pedidoActivo?.clienteNombre || mesa.clienteNombre || 'Comensal' }}</strong>
+          &bull;
+          Atiende: <strong>{{ pedidoActivo?.meseroNombre || mesa.mesero || 'Mesero' }}</strong>
+        </p>
+      </div>
+      <button class="btn-close-modal" (click)="alCerrar()">&times;</button>
+    </div>
+
+    <div class="modal-body active-order-body">
+      <div class="alert alert-error" *ngIf="errorPedidoActivo">{{ errorPedidoActivo }}</div>
+      <div class="alert alert-success" *ngIf="exitoPedidoActivo">{{ exitoPedidoActivo }}</div>
+      <div class="alert alert-info" *ngIf="avisoPedidoActivo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm" style="flex-shrink:0;">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+        <span>{{ avisoPedidoActivo }}</span>
+      </div>
+
+      <!-- Spinner de carga -->
+      <div class="loading-state" *ngIf="cargandoPedido">
+        <p>Cargando comanda activa...</p>
+      </div>
+
+      <div *ngIf="!cargandoPedido && pedidoActivo">
+        <!-- AVISO DE SOLO LECTURA SI NO ES MESERO NI ADMINISTRADOR -->
+        <div class="readonly-badge-banner" *ngIf="!puedeModificarPedido()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" class="icon-sm">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <span>Modo Solo Lectura ({{ perfil?.rolNombre }}) &mdash; Solo los meseros y administradores pueden modificar comandas o agregar productos.</span>
+        </div>
+
+        <!-- SECCIONES DE COMANDA AGRUPADAS POR CATEGORÍA REAL -->
+        <div class="order-section-card" *ngFor="let grupoCat of categoriasDelPedido">
+          <div class="section-card-header">
+            <div class="title-with-badge">
+              <h4>{{ grupoCat.categoriaNombre }}</h4>
+              <span class="category-count-badge">{{ grupoCat.items.length }} {{ grupoCat.items.length === 1 ? 'producto' : 'productos' }}</span>
+            </div>
+            <span class="section-hint">Categoría de menú</span>
+          </div>
+
+          <div class="active-items-list">
+            <div class="active-item-row" *ngFor="let item of grupoCat.items">
+              <div class="item-main-info">
+                <span class="item-qty-badge" [class.beverage]="!item.requiereCoccion">{{ item.cantidad }}x</span>
+                <div>
+                  <span class="item-name">{{ item.productoNombre }}</span>
+                  <p class="item-note" *ngIf="item.modificacion">Obs: "{{ item.modificacion }}"</p>
+                </div>
+              </div>
+
+              <div class="item-status-col">
+                <!-- TIPO: COCINA (REQUIERE COCCIÓN) -->
+                <ng-container *ngIf="item.requiereCoccion">
+                  <span class="badge-prep ready" *ngIf="item.checkCocina">
+                    Listo en cocina
+                  </span>
+                  <span class="badge-prep in-progress" *ngIf="!item.checkCocina && (item.cantidadLista || 0) > 0">
+                    Listo {{ item.cantidadLista }} de {{ item.cantidad }}
+                  </span>
+                  <span class="badge-prep pending"
+                    *ngIf="!item.checkCocina && (!item.cantidadLista || item.cantidadLista === 0)">
+                    En cocina
+                  </span>
+                </ng-container>
+
+                <!-- TIPO: NO REQUIERE PREPARACIÓN (BEBIDAS, ETC.) -> CAMPO ENTREGADO -->
+                <ng-container *ngIf="!item.requiereCoccion">
+                  <label class="check-servido-pill" [class.active]="item.checkMesero"
+                    [class.disabled]="!puedeMarcarServido()"
+                    [title]="item.checkMesero ? 'Producto entregado a la mesa' : 'Marcar como entregado a la mesa'">
+                    <input type="checkbox" class="check-servido-native" [checked]="item.checkMesero"
+                      (change)="alternarItemServido(item)" [disabled]="!puedeMarcarServido()">
+                    <span class="check-box-indicator">
+                      <svg *ngIf="item.checkMesero" viewBox="0 0 16 16" fill="none" class="check-svg">
+                        <path d="M13.5 4.5L6.5 11.5L3 8" stroke="currentColor" stroke-width="2.2"
+                          stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </span>
+                    <span class="check-label-text">{{ item.checkMesero ? 'Entregado' : 'Marcar entregado' }}</span>
+                  </label>
+                </ng-container>
+
+                <span class="item-price">${{ ((item.subtotal || item.precioUnitario * item.cantidad)) | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL PARA AGREGAR MÁS PRODUCTOS AL PEDIDO (SOLO MESERO Y ADMIN) -->
+        <div class="add-more-panel" *ngIf="mostrarAgregarMas && puedeModificarPedido()">
+          <div class="add-more-header">
+            <div class="title-with-badge">
+              <h4>Agregar productos adicionales a la comanda</h4>
+            </div>
+            <button class="btn-link" (click)="alternarMenuAdicional()">&times; Cerrar</button>
+          </div>
+
+          <!-- SEARCH AND CATEGORIES -->
+          <div class="catalog-filters add-more-filters">
+            <div class="search-input-wrapper">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" class="search-icon">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input type="text" [(ngModel)]="busquedaProductoExtra" class="search-input"
+                placeholder="Buscar plato o bebida...">
+            </div>
+
+            <div class="category-pills-scroll">
+              <button class="cat-pill" [class.active]="categoriaExtraId === null" (click)="seleccionarCategoriaExtra(null)">
+                Todos
+              </button>
+              <button class="cat-pill" *ngFor="let cat of categorias" [class.active]="categoriaExtraId === cat.id"
+                (click)="seleccionarCategoriaExtra(cat.id)">
+                {{ cat.nombre }}
+              </button>
+            </div>
+          </div>
+
+          <div class="add-more-split-layout">
+            <!-- GRID DE PRODUCTOS DISPONIBLES -->
+            <div class="add-more-prods-grid">
+              <div class="product-item-card" *ngFor="let p of productosExtraFiltrados" (click)="agregarAlCarritoExtra(p)">
+                <div class="product-item-info">
+                  <span class="prod-badge" [class.kitchen]="p.requiereCoccion" [class.direct]="!p.requiereCoccion">
+                    {{ p.requiereCoccion ? 'Cocina' : 'Bebida / Despacho' }}
+                  </span>
+                  <h4>{{ p.nombre }}</h4>
+                  <p class="prod-desc" *ngIf="p.descripcion">{{ p.descripcion }}</p>
+                </div>
+                <div class="product-item-footer">
+                  <span class="prod-price">${{ p.precio | number:'1.2-2' }}</span>
+                  <button class="btn-add-item" title="Agregar">+ Agregar</button>
+                </div>
+              </div>
+
+              <div class="empty-catalog" *ngIf="productosExtraFiltrados.length === 0">
+                <p>No se encontraron productos en esta categoría o búsqueda.</p>
+              </div>
+            </div>
+
+            <!-- EXTRA CART -->
+            <div class="extra-cart-wrapper" *ngIf="carritoExtra.length > 0">
+              <div class="extra-cart-header">
+                <h5>Items por adicionar:</h5>
+                <span class="cart-badge">{{ carritoExtra.length }} item(s)</span>
+              </div>
+
+              <div class="extra-cart-items-list">
+                <div class="cart-item-row" *ngFor="let ex of carritoExtra; let idx = index">
+                  <div class="cart-item-top">
+                    <div class="cart-item-title">
+                      <strong>{{ ex.producto.nombre }}</strong>
+                      <span class="cart-unit-price">${{ ex.producto.precio | number:'1.2-2' }} c/u</span>
+                    </div>
+                    <div class="cart-item-subtotal">
+                      ${{ (ex.producto.precio * ex.cantidad) | number:'1.2-2' }}
+                    </div>
+                  </div>
+
+                  <div class="cart-item-controls">
+                    <div class="qty-control-group">
+                      <button class="btn-qty" (click)="actualizarCantidadExtra(idx, -1)">-</button>
+                      <span class="qty-val">{{ ex.cantidad }}</span>
+                      <button class="btn-qty" (click)="actualizarCantidadExtra(idx, 1)">+</button>
+                    </div>
+                    <input type="text" [(ngModel)]="ex.modificacion" class="cart-note-input"
+                      placeholder="Nota: sin hielo, etc.">
+                    <button class="btn-remove-item" (click)="eliminarDelCarritoExtra(idx)" title="Quitar">&times;</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="extra-cart-actions">
+                <div class="alert alert-error" *ngIf="errorPedidoActivo" style="margin-bottom: 8px;">{{ errorPedidoActivo }}</div>
+                <button class="btn-submit-order" [disabled]="estaAgregandoItems" (click)="enviarItemsAdicionales()">
+                  <span *ngIf="!estaAgregandoItems">Confirmar Adicionales (${{ totalCarritoExtra | number:'1.2-2' }})</span>
+                  <span *ngIf="estaAgregandoItems">Agregando a la comanda...</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACCIONES DEL PEDIDO ACTIVO -->
+        <div class="active-order-summary">
+          <!-- CHECKBOX GENERAL DE COMANDA SERVIDA -->
+          <div class="comanda-delivery-box" [class.all-done]="estaComandaCompletamenteServida(pedidoActivo)"
+            [class.has-pending]="!estaComandaCompletamenteServida(pedidoActivo)"
+            [class.locked]="!puedeMarcarComandaServida(pedidoActivo) && !estaComandaCompletamenteServida(pedidoActivo)"
+            [title]="estaComandaCompletamenteServida(pedidoActivo) ? 'La comanda ya está marcada como servida a la mesa' : 'Marcar toda la comanda como servida a la mesa'"
+            (click)="alternarComandaCompletaServida()">
+            <div class="general-servido-toggle"
+              [class.disabled]="(!puedeMarcarComandaServida(pedidoActivo) && !estaComandaCompletamenteServida(pedidoActivo)) || !puedeMarcarServido() || estaActualizandoServidoTodo">
+              <span class="general-checkbox-indicator">
+                <svg *ngIf="estaComandaCompletamenteServida(pedidoActivo)" viewBox="0 0 16 16" fill="none" class="check-svg">
+                  <path d="M13.5 4.5L6.5 11.5L3 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg>
+              </span>
+              <div class="toggle-text-block">
+                <div class="toggle-main-title">
+                  {{ estaComandaCompletamenteServida(pedidoActivo) ? 'Comanda servida a la mesa' : 'Marcar toda la comanda como servida a la mesa' }}
+                </div>
+                <div class="toggle-sub-desc" *ngIf="!estanListosPlatosCocina(pedidoActivo)">
+                  Bloqueado: La cocina aún tiene platos en preparación.
+                </div>
+                <div class="toggle-sub-desc"
+                  *ngIf="estanListosPlatosCocina(pedidoActivo) && !estanEntregadosProductosDirectos(pedidoActivo)">
+                  Bloqueado: Marque las bebidas y productos directos como "Entregado" arriba antes de confirmar la comanda.
+                </div>
+                <div class="toggle-sub-desc"
+                  *ngIf="puedeMarcarComandaServida(pedidoActivo) && !estaComandaCompletamenteServida(pedidoActivo)">
+                  Platos listos en cocina y productos directos entregados. Haga clic aquí para confirmar la entrega a la mesa y habilitar el cobro en caja.
+                </div>
+                <div class="toggle-sub-desc ready" *ngIf="estaComandaCompletamenteServida(pedidoActivo)">
+                  Todos los productos están servidos a la mesa. Comanda lista para cobro en caja.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="order-totals-box">
+            <span class="summary-label">Pre-cuenta Acumulada:</span>
+            <span class="summary-amount">${{ pedidoActivo.total | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="active-order-buttons" *ngIf="puedeModificarPedido()">
+            <button class="btn-action-outline" (click)="alternarMenuAdicional()">
+              {{ mostrarAgregarMas ? 'Cerrar Menú Adicional' : '+ Adicionar Productos' }}
+            </button>
+            <button class="btn-action-primary" (click)="solicitarPrecuenta(mesa.id)"
+              [disabled]="estaPrecuentaBloqueada()"
+              [title]="!estaComandaCompletamenteServida(pedidoActivo) ? 'Debe esperar a que la cocina termine y marcar la comanda como servida a la mesa para solicitar la pre-cuenta.' : 'Enviar solicitud de cobro a Caja'">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" class="icon-sm">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+              {{ obtenerTextoBotonPrecuenta() }}
+            </button>
+          </div>
+
+          <div class="readonly-footer-notice" *ngIf="!puedeModificarPedido()">
+            <span class="readonly-tag">🔒 Modo consulta activa &bull; Acciones reservadas a Meseros y Administradores</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!cargandoPedido && !pedidoActivo">
+        <p>No se encontró un pedido activo para esta mesa.</p>
+      </div>
+    </div>
+
+    <!-- Footer del Modal -->
+    <div class="modal-footer modal-footer-comanda">
+      <button type="button" class="btn-modal secundario" (click)="alCerrar()">Cerrar</button>
+      <button type="button" class="btn-cancel-order-trigger" *ngIf="puedeAnularPedido() && pedidoActivo"
+        (click)="abrirModalAnular()" title="Anular comanda activa y liberar la mesa">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="icon-sm">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="15" y1="9" x2="9" y2="15" />
+          <line x1="9" y1="9" x2="15" y2="15" />
+        </svg>
+        <span>Anular Pedido</span>
+      </button>
+    </div>
+  </div>
+</div>

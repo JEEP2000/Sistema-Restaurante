@@ -1,0 +1,93 @@
+<!-- MODAL DE AGREGAR NUEVA MESA (ADMINISTRADOR / DUEÑO) -->
+<div class="modal-overlay fade-in" *ngIf="estaAbierto">
+  <div class="glass-modal create-mesa-modal">
+    <!-- Encabezado del Modal -->
+    <div class="modal-header">
+      <div class="modal-title-with-icon">
+        <div class="modal-icon-badge">🍽️</div>
+        <div>
+          <h3>Agregar Nueva Mesa</h3>
+          <p class="modal-subtitle">Configura los detalles de la mesa para el salón</p>
+        </div>
+      </div>
+      <button class="btn-close-modal" (click)="alCerrar()">&times;</button>
+    </div>
+
+    <!-- Cuerpo del Modal -->
+    <div class="modal-body">
+      <!-- Alertas de Error o Éxito -->
+      <div class="alert alert-error" *ngIf="errorModal">{{ errorModal }}</div>
+      <div class="alert alert-success" *ngIf="exitoModal">{{ exitoModal }}</div>
+
+      <!-- Selector de Sucursal (visible para Dueño / SuperAdmin con varias sedes) -->
+      <div class="form-group"
+        *ngIf="listaSucursales.length > 1 && (perfil?.rolNombre === 'Dueño' || perfil?.rolNombre === 'SuperAdmin')">
+        <label for="nueva-mesa-sucursal">Sucursal / Sede Asignada</label>
+        <select id="nueva-mesa-sucursal" [(ngModel)]="nuevaSucursalMesaId" class="form-control">
+          <option *ngFor="let s of listaSucursales" [ngValue]="s.id">{{ s.nombre }}</option>
+        </select>
+      </div>
+
+      <!-- Input Número de Mesa en una sola línea -->
+      <div class="form-group">
+        <label for="nuevo-mesa-numero">Número de Mesa</label>
+        <div class="input-with-icon-prefix">
+          <span class="input-prefix">Mesa N°</span>
+          <input type="number" id="nuevo-mesa-numero" [(ngModel)]="nuevoNumeroMesa" class="form-control"
+            placeholder="Ej: 6" min="1" step="1" required>
+        </div>
+        <small class="field-hint" style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px; display: block;">
+          Identificador numérico único de la mesa en el salón.
+        </small>
+      </div>
+
+      <!-- Selector de Capacidad con Pills y Stepper personalizado -->
+      <div class="form-group" style="margin-top: 18px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Capacidad de Comensales</label>
+        <div class="capacity-pills-row">
+          <button type="button" class="btn-cap-pill" [class.active]="nuevaCapacidadMesa === 2"
+            (click)="establecerCapacidad(2)">
+            👥 2 Personas
+          </button>
+          <button type="button" class="btn-cap-pill" [class.active]="nuevaCapacidadMesa === 4"
+            (click)="establecerCapacidad(4)">
+            👨‍👩‍👧 4 Personas
+          </button>
+          <button type="button" class="btn-cap-pill" [class.active]="nuevaCapacidadMesa === 6"
+            (click)="establecerCapacidad(6)">
+            👨‍👩‍👧‍👦 6 Personas
+          </button>
+          <button type="button" class="btn-cap-pill" [class.active]="nuevaCapacidadMesa === 8"
+            (click)="establecerCapacidad(8)">
+            🎉 8 Personas
+          </button>
+        </div>
+
+        <div class="custom-cap-row">
+          <span class="custom-cap-lbl">Capacidad personalizada:</span>
+          <div class="custom-cap-stepper">
+            <button type="button" class="btn-step-cap" (click)="ajustarCapacidad(-1)"
+              [disabled]="nuevaCapacidadMesa <= 1" title="Restar comensal">−</button>
+            <div class="cap-input-box">
+              <input type="number" id="nuevo-mesa-capacidad" [(ngModel)]="nuevaCapacidadMesa" class="cap-number-input"
+                min="1" max="50">
+              <span class="cap-unit-tag">personas</span>
+            </div>
+            <button type="button" class="btn-step-cap" (click)="ajustarCapacidad(1)"
+              [disabled]="nuevaCapacidadMesa >= 50" title="Sumar comensal">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pie del Modal -->
+    <div class="modal-footer">
+      <button class="btn-modal secundario" (click)="alCerrar()" [disabled]="estaCreandoMesa">Cancelar</button>
+      <button class="btn-modal btn-primary-action" (click)="guardarMesa()"
+        [disabled]="estaCreandoMesa || !nuevoNumeroMesa || nuevoNumeroMesa <= 0">
+        <span *ngIf="!estaCreandoMesa">+ Crear Mesa</span>
+        <span *ngIf="estaCreandoMesa">Creando mesa...</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,490 @@
+<!-- PANEL GENERAL / RESUMEN (ADMINISTRADOR Y DUEÑO) -->
+<div class="dashboard-view">
+  <!-- ACCIONES RÁPIDAS SEGÚN ROL -->
+  <div class="details-section" style="margin-bottom: 24px;">
+    <div class="glass-subcard">
+      <h3>Panel de {{ perfil?.rolNombre }}</h3>
+      <p class="section-desc">Accesos rápidos y acciones según tu nivel de permisos:</p>
+
+      <div class="role-actions-container" [ngSwitch]="perfil?.rolNombre">
+        <!-- DUEÑO ACTIONS -->
+        <div *ngSwitchCase="'Dueño'" class="role-actions">
+          <button class="btn-action" (click)="solicitarNavegacion('sucursales')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            Gestionar Sucursales
+          </button>
+          <button class="btn-action" (click)="solicitarNavegacion('personal')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            Personal de la Sede
+          </button>
+          <button class="btn-action" (click)="solicitarNavegacion('tables')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 9h18M9 21V9" />
+            </svg>
+            Mapa de Mesas
+          </button>
+          <button class="btn-action" (click)="solicitarNavegacion('kitchen')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            Pantalla de Cocina
+          </button>
+        </div>
+
+        <!-- SUPERADMIN ACTIONS -->
+        <div *ngSwitchCase="'SuperAdmin'" class="role-actions">
+          <button class="btn-action" (click)="solicitarNavegacion('sucursales')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            Gestionar Sucursales
+          </button>
+          <button class="btn-action" (click)="solicitarNavegacion('personal')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            Personal de la Sede
+          </button>
+          <button class="btn-action" (click)="solicitarNavegacion('tables')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 9h18M9 21V9" />
+            </svg>
+            Mapa de Mesas
+          </button>
+          <button class="btn-action" (click)="solicitarNavegacion('kitchen')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            Pantalla de Cocina
+          </button>
+        </div>
+
+        <!-- ADMIN ACTIONS (DEFAULT) -->
+        <div *ngSwitchDefault class="role-actions">
+          <button class="btn-action" (click)="solicitarNavegacion('personal')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            Administrar Personal
+          </button>
+          <button class="btn-action" (click)="solicitarNavegacion('tables')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 9h18M9 21V9" />
+            </svg>
+            Mapa de Mesas
+          </button>
+          <button class="btn-action" (click)="solicitarNavegacion('kitchen')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            Pantalla de Cocina
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN DE ANALÍTICA Y ESTADÍSTICAS OPERATIVAS -->
+  <section class="analytics-dashboard-section">
+    <!-- Header de Filtros -->
+    <div class="analytics-header-card">
+      <div class="analytics-title-group">
+        <div class="analytics-title-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+        </div>
+        <div>
+          <h2 class="analytics-title">Análisis y Estadísticas Operativas</h2>
+          <p class="analytics-subtitle">Monitoreo consolidado de ventas, comandas, métodos de pago, auditoría de anulaciones y ranking de platos</p>
+        </div>
+      </div>
+
+      <!-- Filtros de Período -->
+      <div class="analytics-filters-bar">
+        <div class="filter-chips-group">
+          <button class="analytics-filter-chip" [class.active]="filtroPeriodo === 'hoy'"
+            (click)="alCambiarFiltroPeriodo('hoy')">
+            Hoy
+          </button>
+          <button class="analytics-filter-chip" [class.active]="filtroPeriodo === 'ayer'"
+            (click)="alCambiarFiltroPeriodo('ayer')">
+            Ayer
+          </button>
+          <button class="analytics-filter-chip" [class.active]="filtroPeriodo === 'semana'"
+            (click)="alCambiarFiltroPeriodo('semana')">
+            Últimos 7 días
+          </button>
+          <button class="analytics-filter-chip" [class.active]="filtroPeriodo === 'mes'"
+            (click)="alCambiarFiltroPeriodo('mes')">
+            Este Mes
+          </button>
+          <button class="analytics-filter-chip" [class.active]="filtroPeriodo === 'historico'"
+            (click)="alCambiarFiltroPeriodo('historico')">
+            Histórico
+          </button>
+          <button class="analytics-filter-chip" [class.active]="filtroPeriodo === 'personalizado'"
+            (click)="alCambiarFiltroPeriodo('personalizado')">
+            Personalizado
+          </button>
+        </div>
+
+        <button class="btn-refresh-analytics" (click)="cargarDatosAnalitica()" title="Recargar estadísticas">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.spin]="cargandoAnalitica">
+            <path d="M23 4v6h-6" />
+            <path d="M1 20v-6h6" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Barra de Rango de Fechas Personalizado -->
+      <div class="custom-range-bar" *ngIf="filtroPeriodo === 'personalizado'">
+        <div class="date-input-group">
+          <label>Desde:</label>
+          <input type="date" [(ngModel)]="filtroFechaInicio" (change)="cargarDatosAnalitica()" />
+        </div>
+        <div class="date-input-group">
+          <label>Hasta:</label>
+          <input type="date" [(ngModel)]="filtroFechaFin" (change)="cargarDatosAnalitica()" />
+        </div>
+        <button class="btn-apply-filter" (click)="cargarDatosAnalitica()">
+          Aplicar Rango
+        </button>
+      </div>
+    </div>
+
+    <!-- Spinner de carga -->
+    <div class="analytics-loading-box" *ngIf="cargandoAnalitica">
+      <div class="spinner-small"></div>
+      <p>Calculando métricas analíticas...</p>
+    </div>
+
+    <!-- Contenido Analítico -->
+    <div class="analytics-body" *ngIf="!cargandoAnalitica && datosAnalitica">
+      <!-- 5 TARJETAS KPI UNIFICADAS -->
+      <div class="analytics-kpi-grid">
+        <!-- 1. Total Ventas -->
+        <div class="kpi-card kpi-sales">
+          <div class="kpi-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">Ventas / Facturado</span>
+            <span class="kpi-value highlight-sales">{{ datosAnalitica.totalVentas | currency:'USD':'symbol':'1.2-2' }}</span>
+            <span class="kpi-hint">Ticket Prom.: <strong>{{ datosAnalitica.ticketPromedio | currency:'USD':'symbol':'1.2-2' }}</strong></span>
+          </div>
+        </div>
+
+        <!-- 2. Total Comandas -->
+        <div class="kpi-card kpi-orders">
+          <div class="kpi-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">Comandas</span>
+            <span class="kpi-value highlight-orders">{{ datosAnalitica.totalComandas }} <small class="kpi-unit-tag">totales</small></span>
+            <span class="kpi-hint">Activas: <strong style="color: #60a5fa;">{{ estadisticas.comandasActivas }}</strong> · Efectiv.: <strong [style.color]="datosAnalitica.tasaEfectividad >= 90 ? '#10b981' : '#f59e0b'">{{ datosAnalitica.tasaEfectividad }}%</strong></span>
+          </div>
+        </div>
+
+        <!-- 3. Mesas del Salón -->
+        <div class="kpi-card kpi-tables">
+          <div class="kpi-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 9h18M9 21V9" />
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">Mesas Salón</span>
+            <span class="kpi-value highlight-tables">{{ datosAnalitica.totalMesasAtendidas }} <small class="kpi-unit-tag">atendidas</small></span>
+            <span class="kpi-hint">Ocupadas ahora: <strong style="color: #fbbf24;">{{ estadisticas.mesasOcupadas }}/{{ estadisticas.totalMesas }}</strong> · Hoy: <strong>{{ estadisticas.mesasAtendidasHoy }}</strong></span>
+          </div>
+        </div>
+
+        <!-- 4. Total Pagos -->
+        <div class="kpi-card kpi-payments">
+          <div class="kpi-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+              <line x1="1" y1="10" x2="23" y2="10" />
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">Pagos Liquidados</span>
+            <span class="kpi-value highlight-payments">{{ datosAnalitica.totalPagos }} <small class="kpi-unit-tag">cobros</small></span>
+            <span class="kpi-hint">Transacciones completadas · 100%</span>
+          </div>
+        </div>
+
+        <!-- 5. Total Anulados -->
+        <div class="kpi-card kpi-cancelled">
+          <div class="kpi-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">Comandas Anuladas</span>
+            <span class="kpi-value highlight-cancelled">{{ datosAnalitica.totalAnulados }} <small class="kpi-unit-tag">anuladas</small></span>
+            <span class="kpi-hint">Monto perdido: <strong style="color: #ef4444;">{{ datosAnalitica.montoAnulado | currency:'USD':'symbol':'1.2-2' }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA DE GRÁFICOS PRINCIPALES (Tendencia de Ventas + Métodos de Pago) -->
+      <div class="analytics-charts-row">
+        <!-- Gráfico de Barras de Ventas -->
+        <div class="analytics-panel-card chart-sales-trend">
+          <div class="panel-card-header">
+            <div>
+              <h3 class="panel-card-title">Tendencia de Ventas</h3>
+              <span class="panel-card-subtitle">
+                {{ (filtroPeriodo === 'hoy' || filtroPeriodo === 'ayer') ? 'Distribución horaria de ingresos y comandas' : 'Evolución diaria del volumen de ventas' }}
+              </span>
+            </div>
+            <span class="chart-summary-badge">{{ datosAnalitica.totalVentas | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+
+          <!-- Contenedor del Gráfico de Barras -->
+          <div class="bar-chart-wrapper" *ngIf="datosAnalitica.ventasPorPeriodo.length > 0">
+            <div class="bar-chart-track">
+              <div class="bar-column" *ngFor="let item of datosAnalitica.ventasPorPeriodo"
+                [class.has-sales-col]="item.total > 0">
+                <!-- Tag superior de monto -->
+                <div class="bar-tag-above" *ngIf="item.total > 0">
+                  <span class="bar-amount-text">{{ item.total | currency:'USD':'symbol':'1.0-2' }}</span>
+                  <span class="bar-orders-text">{{ item.comandas }} cmd</span>
+                </div>
+
+                <!-- Tooltip al pasar el mouse -->
+                <div class="bar-tooltip">
+                  <div class="tooltip-time">{{ item.etiqueta }}</div>
+                  <div class="tooltip-total">{{ item.total | currency:'USD':'symbol':'1.2-2' }}</div>
+                  <div class="tooltip-orders">{{ item.comandas }} comanda(s) registrada(s)</div>
+                </div>
+
+                <!-- Relleno de la barra -->
+                <div class="bar-fill-container">
+                  <div class="bar-fill" [style.height.%]="obtenerPorcentajeAlturaBarra(item.total)"
+                    [class.has-sales]="item.total > 0">
+                    <span class="bar-fill-amount" *ngIf="item.total > 0 && obtenerPorcentajeAlturaBarra(item.total) >= 35">{{ item.total | currency:'USD':'symbol':'1.0-0' }}</span>
+                  </div>
+                </div>
+
+                <!-- Etiqueta inferior (Hora o Día) -->
+                <span class="bar-label">{{ item.etiqueta }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-chart-notice" *ngIf="datosAnalitica.ventasPorPeriodo.length === 0">
+            <p>No se registran datos de ventas en este rango de tiempo.</p>
+          </div>
+        </div>
+
+        <!-- Métodos de Pago Breakdown -->
+        <div class="analytics-panel-card payment-methods-card">
+          <div class="panel-card-header">
+            <div>
+              <h3 class="panel-card-title">Métodos de Pago</h3>
+              <span class="panel-card-subtitle">Distribución del dinero recaudado</span>
+            </div>
+            <span class="chart-summary-badge">{{ datosAnalitica.totalPagos }} Cobros</span>
+          </div>
+
+          <div class="payment-methods-list" *ngIf="datosAnalitica.pagosPorMetodo.length > 0">
+            <div class="payment-method-item" *ngFor="let pm of datosAnalitica.pagosPorMetodo">
+              <div class="pm-header">
+                <div class="pm-name-group">
+                  <span class="pm-dot" [style.background-color]="pm.color"></span>
+                  <span class="pm-name">{{ pm.metodo }}</span>
+                  <span class="pm-count">({{ pm.count }} transacc.)</span>
+                </div>
+                <div class="pm-amount-group">
+                  <strong class="pm-total">{{ pm.total | currency:'USD':'symbol':'1.2-2' }}</strong>
+                  <span class="pm-percentage">{{ pm.porcentaje }}%</span>
+                </div>
+              </div>
+              <div class="pm-progress-track">
+                <div class="pm-progress-bar" [style.width.%]="pm.porcentaje" [style.background-color]="pm.color">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-chart-notice" *ngIf="datosAnalitica.pagosPorMetodo.length === 0">
+            <p>No hay cobros registrados en este período.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA SECUNDARIA (Estado de Comandas + Auditoría de Anulaciones + Top Platos) -->
+      <div class="analytics-tri-row">
+        <!-- Estado de Comandas -->
+        <div class="analytics-panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h3 class="panel-card-title">Estado de Comandas</h3>
+              <span class="panel-card-subtitle">Flujo operativo y ciclo de vida</span>
+            </div>
+          </div>
+
+          <div class="order-status-list" *ngIf="datosAnalitica.comandasPorEstado.length > 0">
+            <div class="order-status-row" *ngFor="let est of datosAnalitica.comandasPorEstado">
+              <div class="status-row-top">
+                <div class="status-label-group">
+                  <span class="status-dot" [style.background-color]="est.color"></span>
+                  <span class="status-name">{{ est.label }}</span>
+                </div>
+                <div class="status-values">
+                  <span class="status-count-badge" [style.color]="est.color">{{ est.count }} órdenes</span>
+                  <span class="status-pct">{{ est.porcentaje }}%</span>
+                </div>
+              </div>
+              <div class="status-progress-track">
+                <div class="status-progress-bar" [style.width.%]="est.porcentaje"
+                  [style.background-color]="est.color"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-chart-notice" *ngIf="datosAnalitica.comandasPorEstado.length === 0">
+            <p>Sin comandas en este período.</p>
+          </div>
+        </div>
+
+        <!-- Auditoría de Anulaciones y Motivos -->
+        <div class="analytics-panel-card audit-card">
+          <div class="panel-card-header">
+            <div>
+              <h3 class="panel-card-title">Auditoría de Anulados</h3>
+              <span class="panel-card-subtitle">Motivos de cancelación registrados</span>
+            </div>
+            <span class="badge-anulados-counter" *ngIf="datosAnalitica.totalAnulados > 0">{{ datosAnalitica.totalAnulados }} Anulados</span>
+          </div>
+
+          <!-- Con Anulaciones -->
+          <div class="cancellation-reasons-list"
+            *ngIf="datosAnalitica.totalAnulados > 0 && datosAnalitica.anulacionesPorMotivo.length > 0">
+            <div class="cancellation-item" *ngFor="let mot of datosAnalitica.anulacionesPorMotivo">
+              <div class="cancellation-top">
+                <div class="cancellation-motive-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="warn-icon">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  <span>{{ mot.motivo }}</span>
+                </div>
+                <div class="cancellation-counts">
+                  <strong class="cancellation-lost-monto">-{{ mot.monto | currency:'USD':'symbol':'1.2-2' }}</strong>
+                  <span class="cancellation-times">{{ mot.count }} comanda(s) ({{ mot.porcentaje }}%)</span>
+                </div>
+              </div>
+              <div class="cancellation-progress-track">
+                <div class="cancellation-progress-bar" [style.width.%]="mot.porcentaje"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cero Anulaciones -->
+          <div class="zero-cancellations-box" *ngIf="datosAnalitica.totalAnulados === 0">
+            <div class="positive-shield-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11 14 15 10" />
+              </svg>
+            </div>
+            <h4>¡Cero Anulaciones!</h4>
+            <p>Excelente desempeño operativo. No se registran cancelaciones de pedidos en el período seleccionado.</p>
+          </div>
+        </div>
+
+        <!-- Top 5 Platos Más Vendidos -->
+        <div class="analytics-panel-card top-dishes-card">
+          <div class="panel-card-header">
+            <div>
+              <h3 class="panel-card-title">Top Platos Más Vendidos</h3>
+              <span class="panel-card-subtitle">Platos y bebidas preferidos</span>
+            </div>
+          </div>
+
+          <div class="top-dishes-list" *ngIf="datosAnalitica.topProductos.length > 0">
+            <div class="top-dish-item" *ngFor="let prod of datosAnalitica.topProductos; let i = index">
+              <div class="top-dish-rank" [class.rank-gold]="i === 0" [class.rank-silver]="i === 1"
+                [class.rank-bronze]="i === 2">
+                {{ i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : '#' + (i + 1))) }}
+              </div>
+              <div class="top-dish-details">
+                <div class="top-dish-name-row">
+                  <span class="dish-name">{{ prod.nombre }}</span>
+                  <span class="dish-cat-pill">{{ prod.categoria }}</span>
+                </div>
+                <div class="top-dish-sales-meta">
+                  <span class="dish-qty"><strong>{{ prod.cantidad }}</strong> unidades vendidas</span>
+                  <strong class="dish-revenue">{{ prod.total | currency:'USD':'symbol':'1.2-2' }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-chart-notice" *ngIf="datosAnalitica.topProductos.length === 0">
+            <p>No hay registro de productos vendidos en este período.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,79 @@
+<!-- MAPA DE MESAS VIEW -->
+<div class="dashboard-view">
+  <div class="view-header-actions">
+    <div class="view-header" style="margin-bottom: 0;">
+      <h2>Mapa de Mesas</h2>
+      <p>Distribución en salón y comandas activas en tiempo real</p>
+    </div>
+    <button *ngIf="puedeGestionarMesas()" class="btn-primary-action" (click)="alAbrirCrearMesa()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+      Agregar Mesa
+    </button>
+  </div>
+
+  <!-- Filtros de Mesas -->
+  <div class="tables-filter-bar">
+    <button class="filter-chip" [class.active]="filtroMesa === 'todas'" (click)="establecerFiltro('todas')">
+      Todas las Mesas ({{ mesas.length }})
+    </button>
+    <button class="filter-chip libre" [class.active]="filtroMesa === 'libre'" (click)="establecerFiltro('libre')">
+      <span class="status-indicator-dot libre"></span> Libres
+    </button>
+    <button class="filter-chip ocupada" [class.active]="filtroMesa === 'ocupada'"
+      (click)="establecerFiltro('ocupada')">
+      <span class="status-indicator-dot ocupada"></span> Ocupadas
+    </button>
+    <button class="filter-chip enpago" [class.active]="filtroMesa === 'enpago'" (click)="establecerFiltro('enpago')">
+      <span class="status-indicator-dot enpago"></span> En Pago
+    </button>
+  </div>
+
+  <div class="tables-grid">
+    <div class="table-card interactive" *ngFor="let mesa of mesasFiltradas" [ngClass]="mesa.estado.toLowerCase()"
+      (click)="alSeleccionarMesa(mesa)">
+      <div class="table-header">
+        <div class="table-number">
+          <span class="table-icon">🍽️</span> Mesa {{ mesa.numero }}
+        </div>
+        <span class="status-label">{{ mesa.estado | uppercase }}</span>
+      </div>
+
+      <div class="table-body">
+        <div class="table-info">
+          <span class="capacity">Capacidad: {{ mesa.capacidad }} personas</span>
+        </div>
+
+        <div class="table-order-preview"
+          *ngIf="mesa.estado === 'ocupada' || mesa.estado === 'enpago' || mesa.clienteNombre">
+          <span class="order-client">Cliente: <strong>{{ mesa.clienteNombre || 'Comensal' }}</strong></span>
+        </div>
+      </div>
+
+      <div class="table-footer" *ngIf="mesa.estado === 'ocupada' || mesa.estado === 'enpago' || mesa.total">
+        <span class="waiter">Atiende: {{ mesa.mesero || 'Mesero' }}</span>
+        <span class="total">Total: {{ mesa.total || '$0.00' }}</span>
+      </div>
+
+      <div class="table-card-action">
+        <ng-container *ngIf="mesa.estado.toLowerCase() === 'libre'">
+          <span *ngIf="puedeModificarPedido()" class="action-hint libre">
+            + Tomar Pedido
+          </span>
+          <span *ngIf="!puedeModificarPedido()" class="action-hint libre readonly">
+            Mesa Libre
+          </span>
+        </ng-container>
+        <span *ngIf="mesa.estado.toLowerCase() === 'ocupada'" class="action-hint ocupada">
+          {{ puedeModificarPedido() ? '📋 Ver Comanda / Pre-cuenta' : '👁️ Ver Comanda' }}
+        </span>
+        <span *ngIf="mesa.estado.toLowerCase() === 'enpago'" class="action-hint enpago">
+          {{ puedeModificarPedido() ? '💳 En Proceso de Cobro' : '👁️ Ver Pre-cuenta' }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

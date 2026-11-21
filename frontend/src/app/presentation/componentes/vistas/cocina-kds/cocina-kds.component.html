@@ -1,0 +1,329 @@
+<!-- KITCHEN VIEW (KDS - KITCHEN DISPLAY SYSTEM) -->
+<div class="dashboard-view kds-view">
+
+  <!-- KDS CONTROL HEADER -->
+  <div class="kds-header-bar">
+    <div class="kds-title-section">
+      <div class="kds-badge-pulse">
+        <span class="pulse-dot"></span> EN VIVO
+      </div>
+      <div class="kds-title-texts">
+        <h2>Módulo de Cocina • KDS</h2>
+        <p>{{ obtenerNombreSucursal(sucursalId) }} • Visualización de comandas en tiempo real</p>
+      </div>
+    </div>
+
+    <!-- RELOJ Y METRICAS RAPIDAS -->
+    <div class="kds-metrics-bar">
+      <div class="kds-metric-card">
+        <span class="kds-metric-num">{{ ticketsCocina.length }}</span>
+        <span class="kds-metric-label">Comandas</span>
+      </div>
+      <div class="kds-metric-card alert" [class.highlight]="cantidadTicketsPorIniciar > 0">
+        <span class="kds-metric-num">{{ cantidadTicketsPorIniciar }}</span>
+        <span class="kds-metric-label">Por Iniciar</span>
+      </div>
+      <div class="kds-metric-card" [class.highlight]="cantidadTicketsEnPreparacion > 0">
+        <span class="kds-metric-num">{{ cantidadTicketsEnPreparacion }}</span>
+        <span class="kds-metric-label">En Cocción</span>
+      </div>
+      <div class="kds-metric-card success">
+        <span class="kds-metric-num">{{ cantidadTicketsListos }}</span>
+        <span class="kds-metric-label">Listas</span>
+      </div>
+      <div class="kds-clock-card">
+        <span class="kds-clock-time">{{ horaActualString }}</span>
+        <span class="kds-clock-label">Hora Cocina</span>
+      </div>
+    </div>
+
+    <!-- ACCIONES SUPERIORES -->
+    <div class="kds-actions-bar">
+      <button class="btn-kds-icon" [class.active]="sonidoHabilitado"
+        (click)="sonidoHabilitado = !sonidoHabilitado"
+        [title]="sonidoHabilitado ? 'Sonido Activado' : 'Sonido Silenciado'">
+        <svg *ngIf="sonidoHabilitado" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg *ngIf="!sonidoHabilitado" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+        <span>{{ sonidoHabilitado ? 'Sonido ON' : 'Mute' }}</span>
+      </button>
+
+      <button class="btn-kds-icon refresh" [class.spinning]="estaActualizando"
+        (click)="cargarTicketsCocina(false)" title="Actualizar Comandas">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        <span>Actualizar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- KDS TOOLBAR: FILTROS TABS, BUSCADOR Y ORDENAMIENTO -->
+  <div class="kds-toolbar">
+    <div class="kds-tabs">
+      <button class="kds-tab" [class.active]="filtroCocina === 'all'" (click)="filtroCocina = 'all'">
+        Todas <span class="tab-badge">{{ ticketsCocina.length }}</span>
+      </button>
+      <button class="kds-tab" [class.active]="filtroCocina === 'unstarted'" (click)="filtroCocina = 'unstarted'">
+        Por Iniciar <span class="tab-badge">{{ cantidadTicketsPorIniciar }}</span>
+      </button>
+      <button class="kds-tab pending" [class.active]="filtroCocina === 'pending'" (click)="filtroCocina = 'pending'">
+        En Preparación <span class="tab-badge">{{ cantidadTicketsEnPreparacion }}</span>
+      </button>
+      <button class="kds-tab ready" [class.active]="filtroCocina === 'ready'" (click)="filtroCocina = 'ready'">
+        100% Listas <span class="tab-badge">{{ cantidadTicketsListos }}</span>
+      </button>
+    </div>
+
+    <div class="kds-toolbar-right">
+      <!-- BUSCADOR -->
+      <div class="kds-search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sm search-icon">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" [(ngModel)]="busquedaCocina" placeholder="Buscar mesa, plato, cocinero..."
+          class="kds-search-input">
+        <button class="clear-search-btn" *ngIf="busquedaCocina" (click)="busquedaCocina = ''">✕</button>
+      </div>
+
+      <!-- ORDEN FIFO / LIFO -->
+      <button class="btn-kds-sort" (click)="ordenCocina = ordenCocina === 'fifo' ? 'lifo' : 'fifo'"
+        [title]="ordenCocina === 'fifo' ? 'Orden: Más antiguos primero (FIFO)' : 'Orden: Más recientes primero'">
+        <span>{{ ordenCocina === 'fifo' ? '⏱️ Más Antiguos Primero' : '🆕 Más Recientes Primero' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- KDS GRID DE TICKETS (COMANDAS) -->
+  <div class="kds-grid" *ngIf="ticketsCocinaFiltrados.length > 0">
+    <div class="kds-card" *ngFor="let ticket of ticketsCocinaFiltrados; trackBy: trackByPedidoId" [ngClass]="[
+        ticket.platosListos === ticket.totalPlatos ? 'card-all-ready' : (!ticket.fechaInicioCocina ? 'card-waiting' : 'card-cooking')
+      ]">
+
+      <!-- TICKET CARD HEADER -->
+      <div class="kds-card-header">
+        <div class="kds-table-badge">
+          <span class="table-label">{{ ticket.esDelivery ? '🛵' : 'MESA' }}</span>
+          <span class="table-num">{{ ticket.esDelivery ? 'DELIVERY' : ticket.mesa }}</span>
+        </div>
+
+        <div class="kds-ticket-meta">
+          <div class="ticket-id">#ORD-{{ ticket.pedidoId }}</div>
+          <div class="ticket-waiter" *ngIf="ticket.meseroNombre">
+            <span class="meta-icon">👤</span> {{ ticket.meseroNombre }}
+          </div>
+          <div class="ticket-client" *ngIf="ticket.clienteNombre && ticket.clienteNombre !== 'Cliente'">
+            <span class="meta-icon">🏷️</span> {{ ticket.clienteNombre }}
+          </div>
+        </div>
+
+        <!-- BADGE DE ESTADO DEL PEDIDO (SIN CUADRO URGENTE) -->
+        <div class="kds-header-status-box">
+          <span class="kds-status-badge waiting" *ngIf="!ticket.fechaInicioCocina">
+            ⏱️ En espera
+          </span>
+          <span class="kds-status-badge cooking" *ngIf="ticket.fechaInicioCocina && ticket.platosListos < ticket.totalPlatos">
+            🔥 {{ formatearTiempoTicket(ticket.tiempo) }}
+          </span>
+          <span class="kds-status-badge ready" *ngIf="ticket.platosListos === ticket.totalPlatos">
+            ✨ Listo • {{ formatearTiempoTicket(ticket.tiempo, ticket) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- SECCIÓN SOLICITADA: ASIGNACIÓN DE COCINERO Y BOTÓN INICIAR   -->
+      <!-- ============================================================ -->
+      <!-- CASO 1: CUANDO AÚN NO HA INICIADO PREPARACIÓN -->
+      <div class="kds-comanda-start-panel" *ngIf="!ticket.fechaInicioCocina">
+        <div class="kds-comanda-select-box">
+          <span class="comanda-chef-icon">👨‍🍳</span>
+          <select [(ngModel)]="ticket.cocineroSeleccionadoNombre" class="comanda-cook-dropdown">
+            <option value="" disabled>Seleccionar Cocinero...</option>
+            <option *ngFor="let c of listaCocineros" [value]="c.nombre">
+              {{ c.nombre }} {{ c.apellido ? c.apellido : '' }}
+            </option>
+          </select>
+        </div>
+        <button class="btn-comanda-iniciar"
+          [disabled]="!ticket.cocineroSeleccionadoNombre"
+          (click)="empezarPreparacion(ticket)"
+          title="Iniciar preparación y arrancar tiempo">
+          <span class="btn-play-icon">▶</span>
+          <span>Iniciar</span>
+        </button>
+      </div>
+
+      <!-- CASO 2: CUANDO YA SE INICIÓ LA PREPARACIÓN -->
+      <div class="kds-comanda-cooking-bar" *ngIf="ticket.fechaInicioCocina" [class.cooking-done]="ticket.platosListos === ticket.totalPlatos">
+        <div class="cooking-cook-info">
+          <span class="chef-badge-icon">👨‍🍳</span>
+          <span class="chef-text">Cocinero: <strong>{{ ticket.cocineroNombre }}</strong></span>
+        </div>
+        <div class="cooking-live-timer" *ngIf="ticket.platosListos < ticket.totalPlatos">
+          <span class="timer-dot"></span>
+          <span class="timer-text">{{ formatearTiempoTicket(ticket.tiempo) }} en cocción</span>
+        </div>
+        <div class="cooking-live-timer done" *ngIf="ticket.platosListos === ticket.totalPlatos">
+          <span class="timer-dot green"></span>
+          <span class="timer-text">Listo en {{ formatearTiempoTicket(ticket.tiempo, ticket) }}</span>
+        </div>
+      </div>
+
+      <!-- BARRA DE PROGRESO DE LA COMANDA -->
+      <div class="kds-progress-container">
+        <div class="kds-progress-labels">
+          <span>{{ ticket.platosListos }} de {{ ticket.totalPlatos }} platos listos</span>
+          <span class="progress-pct">{{ ticket.totalPlatos > 0 ? (ticket.platosListos / ticket.totalPlatos * 100 |
+            number:'1.0-0') : 0 }}%</span>
+        </div>
+        <div class="kds-progress-bar">
+          <div class="kds-progress-fill"
+            [style.width.%]="ticket.totalPlatos > 0 ? (ticket.platosListos / ticket.totalPlatos * 100) : 0"></div>
+        </div>
+      </div>
+
+      <!-- LISTA DE PLATOS EN COCINA -->
+      <div class="kds-items-list">
+        <div class="kds-item-row" *ngFor="let item of ticket.items; trackBy: trackByDetalleId"
+          [class.item-ready]="item.checkCocina"
+          [class.disabled-row]="!ticket.fechaInicioCocina"
+          (click)="ticket.fechaInicioCocina ? alternarPlatoCocina(ticket, item) : null">
+
+          <!-- FILA SUPERIOR -->
+          <div class="kds-item-header-row">
+            <div class="kds-item-left">
+              <!-- CHECKBOX INTERACTIVO TÁCTIL -->
+              <div class="kds-checkbox" [class.checked]="item.checkCocina">
+                <svg *ngIf="item.checkCocina" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                  class="check-icon">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+
+              <!-- CANTIDAD -->
+              <div class="kds-item-qty">
+                {{ item.cantidad }}x
+              </div>
+
+              <!-- TÍTULO DEL PLATO Y CATEGORÍA -->
+              <div class="kds-item-title-box">
+                <span class="kds-item-name">{{ item.nombre }}</span>
+                <span class="kds-item-category" *ngIf="item.categoriaNombre">{{ item.categoriaNombre }}</span>
+              </div>
+            </div>
+
+            <!-- CONTROLES DE ACCIÓN A LA DERECHA -->
+            <div class="kds-item-actions-box" (click)="$event.stopPropagation()">
+              <!-- CASO 1: Cantidad > 1 -->
+              <ng-container *ngIf="item.cantidad > 1">
+                <div class="kds-counter-pill" [class.done]="item.checkCocina"
+                  [class.in-progress]="(item.cantidadLista || 0) > 0 && !item.checkCocina"
+                  [class.disabled-counter]="!ticket.fechaInicioCocina">
+                  <button type="button" class="btn-counter-step minus" *ngIf="(item.cantidadLista || 0) > 0"
+                    [disabled]="!ticket.fechaInicioCocina"
+                    (click)="avanzarPlatosCocina(ticket, item, -1)" title="Restar 1 plato preparado">
+                    −
+                  </button>
+                  <button type="button" class="btn-counter-main"
+                    [disabled]="!ticket.fechaInicioCocina"
+                    [title]="!ticket.fechaInicioCocina ? 'Presione Iniciar para comenzar' : 'Marcar plato preparado'"
+                    (click)="avanzarPlatosCocina(ticket, item, 1)">
+                    <span class="pill-text">Listo <strong>{{ item.cantidadLista || 0 }}</strong> de <strong>{{ item.cantidad }}</strong></span>
+                  </button>
+                </div>
+              </ng-container>
+
+              <!-- CASO 2: Cantidad = 1 -->
+              <ng-container *ngIf="item.cantidad === 1">
+                <button type="button" class="btn-kds-item-action" [class.ready]="item.checkCocina"
+                  [disabled]="!ticket.fechaInicioCocina"
+                  [title]="!ticket.fechaInicioCocina ? 'Presione Iniciar para comenzar a cocinar' : (item.checkCocina ? 'Plato preparado' : 'Marcar plato como cocinado')"
+                  (click)="alternarPlatoCocina(ticket, item)">
+                  <span *ngIf="!item.checkCocina">🍳 Cocinar</span>
+                  <span *ngIf="item.checkCocina">✓ Preparado</span>
+                </button>
+              </ng-container>
+            </div>
+          </div>
+
+          <!-- NOTAS / MODIFICACIONES DE COMANDA -->
+          <div class="kds-item-note-row" *ngIf="item.nota">
+            <span class="note-icon">📝</span>
+            <span class="note-text">{{ item.nota }}</span>
+          </div>
+
+          <!-- METADATOS DEL PLATO: COCINERO Y TIEMPO DEMORADO -->
+          <div class="kds-item-cook-tag" *ngIf="item.checkCocina || (item.cantidadLista || 0) > 0">
+            <span class="cook-avatar-micro">👨‍🍳</span>
+            <span class="cook-tag-text">
+              <strong>{{ item.cocineroNombre || ticket.cocineroNombre || 'Cocinero' }}</strong>
+              <span *ngIf="item.checkCocina || item.fechaCheckCocina || item.segundosDemorados !== null" class="cook-tag-time" [title]="'Listo a las ' + (item.fechaCheckCocina | date:'HH:mm:ss')">
+                • ⏱️ Demoró {{ calcularTiempoDemoradoItem(ticket, item) }}
+              </span>
+            </span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- FOOTER DE COMANDA: BOTÓN LISTO PARA QUE EL MESERO RECOJA     -->
+      <!-- ============================================================ -->
+      <div class="kds-card-footer">
+        <button class="btn-comanda-listo"
+          *ngIf="ticket.fechaInicioCocina && ticket.platosListos < ticket.totalPlatos"
+          (click)="marcarTicketCompletoListo(ticket)">
+          <span class="footer-btn-icon">✓</span>
+          <span>Listo (Avisar a Mesero)</span>
+        </button>
+
+        <div class="kds-ticket-completed-banner" *ngIf="ticket.platosListos === ticket.totalPlatos">
+          <div class="completed-icon-box">🔔</div>
+          <div class="completed-text-box">
+            <strong>¡Plato 100% Listo!</strong>
+            <span>Listo para que el mesero recoja el plato y atienda</span>
+          </div>
+        </div>
+
+        <div class="kds-footer-waiting-hint" *ngIf="!ticket.fechaInicioCocina">
+          <span>👈 Seleccione cocinero y presione <strong>Iniciar</strong> para comenzar</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- EMPTY STATE CUANDO NO HAY TICKETS -->
+  <div class="kds-empty-state fade-in" *ngIf="ticketsCocinaFiltrados.length === 0">
+    <div class="empty-kitchen-icon">👨‍🍳</div>
+    <h3>{{ busquedaCocina ? 'No se encontraron comandas con esa búsqueda' : '¡Cocina al día y sin pendientes!' }}</h3>
+    <p *ngIf="!busquedaCocina">
+      Todas las comandas han sido preparadas o no hay pedidos activos en cocina.
+    </p>
+    <p *ngIf="busquedaCocina">
+      Prueba buscando por otro número de mesa, cliente o plato.
+    </p>
+    <button class="btn-kds-empty-action" *ngIf="busquedaCocina" (click)="busquedaCocina = ''">
+      Limpiar búsqueda
+    </button>
+    <button class="btn-kds-empty-action" *ngIf="!busquedaCocina" (click)="cargarTicketsCocina(false)">
+      🔄 Actualizar pantalla
+    </button>
+  </div>
+
+</div>

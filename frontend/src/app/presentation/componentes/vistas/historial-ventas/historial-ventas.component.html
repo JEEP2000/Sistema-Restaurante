@@ -1,0 +1,237 @@
+<!-- BANDEJA DE HISTORIAL DE VENTAS Y REPORTES -->
+<div class="dashboard-view">
+  <div class="caja-view-header">
+    <div>
+      <h2>{{ puedeVerKpisFinancieros() ? 'Historial de Ventas' : 'Historial de Pedidos' }}</h2>
+      <p class="subtitle" *ngIf="puedeVerKpisFinancieros()">Registro histórico de pedidos cobrados, desglose de consumo por comanda y métricas de recaudación.</p>
+      <p class="subtitle" *ngIf="!puedeVerKpisFinancieros()">Registro y seguimiento histórico de todos los pedidos (cobrados, en proceso, listos y anulados).</p>
+    </div>
+    <div class="caja-header-actions">
+      <button class="btn-refresh-caja" (click)="cargarHistorialVentas()" title="Refrescar historial">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" class="icon-sm">
+          <polyline points="23 4 23 10 17 10" />
+          <polyline points="1 20 1 14 7 14" />
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+        </svg>
+        Refrescar
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTROS DE HISTORIAL -->
+  <div class="ventas-filter-panel">
+    <div class="filter-presets-row">
+      <div class="preset-buttons">
+        <button class="btn-filter-chip" [class.active]="filtroFechaVentas === 'hoy'"
+          (click)="alCambiarFiltroFecha('hoy')">Hoy</button>
+        <button class="btn-filter-chip" [class.active]="filtroFechaVentas === 'ayer'"
+          (click)="alCambiarFiltroFecha('ayer')">Ayer</button>
+        <button class="btn-filter-chip" [class.active]="filtroFechaVentas === 'semana'"
+          (click)="alCambiarFiltroFecha('semana')">Últimos 7 días</button>
+        <button class="btn-filter-chip" [class.active]="filtroFechaVentas === 'mes'"
+          (click)="alCambiarFiltroFecha('mes')">Este Mes</button>
+        <button class="btn-filter-chip" [class.active]="filtroFechaVentas === 'todos'"
+          (click)="alCambiarFiltroFecha('todos')">Histórico Completo</button>
+        <button class="btn-filter-chip" [class.active]="filtroFechaVentas === 'personalizado'"
+          (click)="alCambiarFiltroFecha('personalizado')">Rango Personalizado</button>
+      </div>
+
+      <div class="filter-controls-right">
+        <div class="filter-select-group">
+          <label>Estado:</label>
+          <select [(ngModel)]="filtroEstadoVentas" (change)="alCambiarFiltroEstado()"
+            class="select-metodo-filter">
+            <option value="TODOS">Todos los Estados</option>
+            <option value="PAGADO">Cobrados / Pagados</option>
+            <option value="EN_PROCESO">En Cocina / Proceso</option>
+            <option value="LISTO">Listos para Servir</option>
+            <option value="PENDIENTE_PAGO">Pendientes de Pago</option>
+            <option value="ANULADO">Anulados</option>
+          </select>
+        </div>
+        <div class="filter-select-group">
+          <label>Método de Pago:</label>
+          <select [(ngModel)]="filtroMetodoPago" (change)="alCambiarFiltroMetodo()" class="select-metodo-filter">
+            <option value="TODOS">Todos los Métodos</option>
+            <option value="EFECTIVO">Efectivo</option>
+            <option value="TARJETA">Tarjeta</option>
+            <option value="YAPE">Yape / Transferencia</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rango personalizado si aplica -->
+    <div class="custom-date-row" *ngIf="filtroFechaVentas === 'personalizado'">
+      <div class="date-input-group">
+        <label>Desde:</label>
+        <input type="date" [(ngModel)]="filtroFechaInicio" class="form-control-date">
+      </div>
+      <div class="date-input-group">
+        <label>Hasta:</label>
+        <input type="date" [(ngModel)]="filtroFechaFin" class="form-control-date">
+      </div>
+      <button class="btn-apply-date" (click)="cargarHistorialVentas()">Aplicar Rango</button>
+    </div>
+
+    <div class="search-ventas-bar">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="search-icon">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input type="text" [(ngModel)]="busquedaVentas"
+        placeholder="Buscar por N° pedido, mesa, cliente, plato o mesero..." class="ventas-search-input">
+      <span class="results-count" *ngIf="historialVentas.length > 0">
+        Mostrando {{ ventasFiltradas.length }} de {{ historialVentas.length }} registros
+      </span>
+    </div>
+  </div>
+
+  <!-- KPI STATS CARDS (SOLO ADMINISTRADORES Y DUEÑOS) -->
+  <div class="ventas-stats-grid" *ngIf="puedeVerKpisFinancieros()">
+    <div class="ventas-stat-card primary">
+      <div class="stat-icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Recaudado</span>
+        <span class="stat-value">${{ (historialResumen?.totalVentas || 0) | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <div class="ventas-stat-card">
+      <div class="stat-icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+        </svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Comandas Cobradas</span>
+        <span class="stat-value">{{ historialResumen?.totalOrdenes || 0 }}</span>
+      </div>
+    </div>
+
+    <div class="ventas-stat-card">
+      <div class="stat-icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Ticket Promedio</span>
+        <span class="stat-value">${{ (historialResumen?.ticketPromedio || 0) | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <div class="ventas-stat-card methods-card">
+      <span class="stat-label">Por Método de Pago:</span>
+      <div class="methods-badges-list">
+        <span class="method-mini-badge" *ngFor="let m of historialResumen?.ventasPorMetodo">
+          <strong>{{ m.metodo }}:</strong> ${{ m.total | number:'1.2-2' }} ({{ m.count }})
+        </span>
+        <span *ngIf="!historialResumen?.ventasPorMetodo || historialResumen?.ventasPorMetodo?.length === 0"
+          class="no-methods-text">
+          Sin cobros registrados
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div class="loading-state" *ngIf="cargandoHistorialVentas">
+    <p>Cargando historial de pedidos y ventas...</p>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div class="caja-empty-state" *ngIf="!cargandoHistorialVentas && ventasFiltradas.length === 0">
+    <div class="empty-icon-box">📊</div>
+    <h3>No se encontraron pedidos para este período o filtro</h3>
+    <p>Asegúrate de haber seleccionado el rango de fecha correcto o prueba quitando los filtros de búsqueda.</p>
+  </div>
+
+  <!-- TABLA DE VENTAS / HISTORIAL DE PEDIDOS -->
+  <div class="ventas-table-container" *ngIf="!cargandoHistorialVentas && ventasFiltradas.length > 0">
+    <table class="ventas-master-table">
+      <thead>
+        <tr>
+          <th>N° Pedido</th>
+          <th>Fecha y Hora</th>
+          <th>Estado</th>
+          <th>Mesa / Canal</th>
+          <th>Atendido Por</th>
+          <th>Cliente</th>
+          <th>Método de Pago</th>
+          <th>Ítems</th>
+          <th style="text-align: right;">Total</th>
+          <th style="text-align: center;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let venta of ventasFiltradas">
+          <td><span class="order-tag">#{{ venta.pedidoId }}</span></td>
+          <td>{{ (venta.fechaPago || venta.fechaCreacion) | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>
+            <span class="badge-order-status" [ngClass]="(venta.estado || 'PENDIENTE').toLowerCase()">
+              <span *ngIf="venta.estado === 'PAGADO'">● Cobrado</span>
+              <span *ngIf="venta.estado === 'ANULADO'">✕ Anulado</span>
+              <span *ngIf="venta.estado === 'EN_PROCESO'">⏳ En Cocina</span>
+              <span *ngIf="venta.estado === 'LISTO'">✓ Listo</span>
+              <span *ngIf="venta.estado === 'PENDIENTE_PAGO'">💳 En Caja</span>
+              <span *ngIf="venta.estado !== 'PAGADO' && venta.estado !== 'ANULADO' && venta.estado !== 'EN_PROCESO' && venta.estado !== 'LISTO' && venta.estado !== 'PENDIENTE_PAGO'">{{ venta.estado }}</span>
+            </span>
+          </td>
+          <td>
+            <span class="mesa-tag" *ngIf="venta.mesaNumero">Mesa {{ venta.mesaNumero }}</span>
+            <span class="delivery-tag" *ngIf="venta.esDelivery">Delivery</span>
+            <span class="mostrador-tag" *ngIf="!venta.mesaNumero && !venta.esDelivery">Mostrador</span>
+          </td>
+          <td>{{ venta.meseroNombre || 'Sin asignar' }}</td>
+          <td><strong>{{ venta.clienteNombre || 'Comensal' }}</strong></td>
+          <td>
+            <span class="badge-metodo-pill" *ngIf="venta.estado === 'PAGADO'"
+              [ngClass]="(venta.metodoPago || 'EFECTIVO').toLowerCase()">
+              {{ venta.metodoPago || 'EFECTIVO' }}
+            </span>
+            <span class="badge-metodo-pill anulado" *ngIf="venta.estado === 'ANULADO'">
+              ANULADO
+            </span>
+            <span class="badge-metodo-pill pendiente"
+              *ngIf="venta.estado !== 'PAGADO' && venta.estado !== 'ANULADO'">
+              POR COBRAR
+            </span>
+          </td>
+          <td>
+            <span class="items-count-badge">{{ venta.detalles.length }} producto(s)</span>
+          </td>
+          <td style="text-align: right;" class="total-cell">
+            <strong *ngIf="venta.estado === 'PAGADO'" class="total-pagado">${{ (venta.montoPagado || venta.total) | number:'1.2-2' }}</strong>
+            <strong *ngIf="venta.estado === 'ANULADO'" class="total-anulado">${{ venta.total | number:'1.2-2' }}</strong>
+            <strong *ngIf="venta.estado !== 'PAGADO' && venta.estado !== 'ANULADO'" class="total-pendiente">${{ venta.total | number:'1.2-2' }}</strong>
+          </td>
+          <td style="text-align: center;">
+            <button class="btn-ver-detalle-venta" (click)="verDetalleVenta(venta)"
+              title="Ver productos de esta comanda">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" class="icon-xs">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              Ver Detalle
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,172 @@
+<!-- MODAL DE COBRO / LIQUIDACIÓN (CAJA) -->
+<div class="modal-overlay fade-in" *ngIf="estaAbierto && pedido">
+  <div class="glass-modal payment-modal">
+    <!-- Encabezado del Modal -->
+    <div class="modal-header">
+      <div>
+        <h3>Cobrar Mesa {{ pedido.mesaNumero }} - Pedido #{{ pedido.id }}</h3>
+        <p class="modal-subtitle">
+          Cliente: <strong>{{ pedido.clienteNombre || 'Comensal' }}</strong> &bull;
+          Atendió: <strong>{{ pedido.meseroNombre || 'Mesero' }}</strong>
+        </p>
+      </div>
+      <button class="btn-close-modal" (click)="alCerrar()">&times;</button>
+    </div>
+
+    <div class="modal-body payment-modal-body">
+      <div class="alert alert-error" *ngIf="errorPago">{{ errorPago }}</div>
+      <div class="alert alert-success" *ngIf="exitoPago">{{ exitoPago }}</div>
+
+      <!-- TOTAL A PAGAR HIGHLIGHT -->
+      <div class="payment-total-banner">
+        <span class="total-banner-label">TOTAL A COBRAR</span>
+        <span class="total-banner-val">${{ pedido.total | number:'1.2-2' }}</span>
+      </div>
+
+      <!-- ALERTA SI HAY PRODUCTOS SIN ENTREGAR -->
+      <div class="alert-blocked-delivery fade-in" *ngIf="!estaComandaCompletamenteServida(pedido)">
+        <div class="blocked-title">
+          <strong>Cobro Bloqueado: Productos Pendientes de Servir</strong>
+        </div>
+        <p class="blocked-desc">
+          No se puede realizar el cobro ni liberar la mesa hasta que todos los productos estén preparados y servidos a la mesa:
+        </p>
+        <div class="blocked-items-list">
+          <div class="blocked-item-tag" *ngFor="let it of obtenerItemsPendientes(pedido)">
+            <span class="tag-name">{{ it.cantidad }}x {{ it.productoNombre }}</span>
+            <span class="tag-role">({{ it.requiereCoccion && !it.checkCocina ? 'En Cocina' : 'Pendiente de servir' }})</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIPO DE COMPROBANTE -->
+      <div class="payment-section-group">
+        <label class="section-label">Tipo de Comprobante</label>
+        <div class="voucher-type-pills">
+          <button type="button" class="btn-voucher-pill" [class.active]="tipoComprobante === 'BOLETA'"
+            (click)="establecerTipoComprobante('BOLETA')">
+            🧾 Boleta de Venta
+          </button>
+          <button type="button" class="btn-voucher-pill" [class.active]="tipoComprobante === 'FACTURA'"
+            (click)="establecerTipoComprobante('FACTURA')">
+            🏢 Factura
+          </button>
+          <button type="button" class="btn-voucher-pill" [class.active]="tipoComprobante === 'TICKET'"
+            (click)="establecerTipoComprobante('TICKET')">
+            🏷️ Ticket / Nota
+          </button>
+        </div>
+      </div>
+
+      <!-- CAMPOS EXCLUSIVOS FACTURA -->
+      <div class="factura-fields-box fade-in" *ngIf="tipoComprobante === 'FACTURA'">
+        <div class="form-row" style="display: flex; gap: 12px;">
+          <div class="form-group" style="flex: 1;">
+            <label for="fac-ruc">RUC de la Empresa (11 dígitos)</label>
+            <input type="text" id="fac-ruc" [(ngModel)]="facturaRuc" maxlength="11" class="form-control"
+              placeholder="Ej: 20123456789">
+          </div>
+          <div class="form-group" style="flex: 2;">
+            <label for="fac-rs">Razón Social</label>
+            <input type="text" id="fac-rs" [(ngModel)]="facturaRazonSocial" class="form-control"
+              placeholder="Ej: Servicios Gastronómicos S.A.C.">
+          </div>
+        </div>
+      </div>
+
+      <!-- MÉTODO DE PAGO -->
+      <div class="payment-section-group">
+        <label class="section-label">Método de Pago</label>
+        <div class="payment-methods-grid">
+          <button type="button" class="btn-method-card" [class.active]="metodoPago === 'EFECTIVO'"
+            (click)="establecerMetodoPago('EFECTIVO')">
+            <span class="method-icon">💵</span>
+            <span class="method-name">Efectivo</span>
+          </button>
+          <button type="button" class="btn-method-card" [class.active]="metodoPago === 'TARJETA'"
+            (click)="establecerMetodoPago('TARJETA')">
+            <span class="method-icon">💳</span>
+            <span class="method-name">Tarjeta POS</span>
+          </button>
+          <button type="button" class="btn-method-card" [class.active]="metodoPago === 'YAPE_PLIN'"
+            (click)="establecerMetodoPago('YAPE_PLIN')">
+            <span class="method-icon">📱</span>
+            <span class="method-name">Yape / Plin</span>
+          </button>
+          <button type="button" class="btn-method-card" [class.active]="metodoPago === 'TRANSFERENCIA'"
+            (click)="establecerMetodoPago('TRANSFERENCIA')">
+            <span class="method-icon">🏦</span>
+            <span class="method-name">Transferencia</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- DETALLES SEGÚN MÉTODO DE PAGO -->
+      <!-- CASO 1: EFECTIVO (CALCULADORA DE VUELTO) -->
+      <div class="cash-calculator-box fade-in" *ngIf="metodoPago === 'EFECTIVO'">
+        <div class="form-group">
+          <label for="efectivo-recibido">Monto Recibido en Efectivo ($)</label>
+          <input type="number" id="efectivo-recibido" [(ngModel)]="efectivoRecibido" class="form-control cash-input"
+            step="0.50" min="0">
+        </div>
+
+        <!-- BOTONES RÁPIDOS DE BILLETES -->
+        <div class="quick-cash-row">
+          <button type="button" class="btn-quick-cash exact" (click)="establecerMontoExacto()">Monto Exacto</button>
+          <button type="button" class="btn-quick-cash" (click)="agregarEfectivo(10)">+$10</button>
+          <button type="button" class="btn-quick-cash" (click)="agregarEfectivo(20)">+$20</button>
+          <button type="button" class="btn-quick-cash" (click)="agregarEfectivo(50)">+$50</button>
+          <button type="button" class="btn-quick-cash" (click)="agregarEfectivo(100)">+$100</button>
+        </div>
+
+        <!-- INDICADOR DE VUELTO O FALTANTE -->
+        <div class="change-indicator" [class.has-change]="vueltoEfectivo > 0"
+          [class.insufficient]="efectivoRecibido < (pedido.total || 0)">
+          <div *ngIf="vueltoEfectivo > 0" class="change-text">
+            <span class="change-label">Vuelto a entregar al cliente:</span>
+            <strong class="change-amount">${{ vueltoEfectivo | number:'1.2-2' }}</strong>
+          </div>
+          <div *ngIf="efectivoRecibido === (pedido.total || 0)" class="change-text exact">
+            <span>Pago exacto. Sin vuelto.</span>
+          </div>
+          <div *ngIf="efectivoRecibido < (pedido.total || 0)" class="change-text error">
+            <span>Falta para completar el total: <strong>${{ ((pedido.total || 0) - efectivoRecibido) | number:'1.2-2' }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CASO 2: DIGITAL O TARJETA (REFERENCIA/CÓDIGO OPERACIÓN) -->
+      <div class="digital-ref-box fade-in" *ngIf="metodoPago !== 'EFECTIVO'">
+        <div class="form-group">
+          <label for="op-ref">Nro. de Operación / Referencia (Opcional)</label>
+          <input type="text" id="op-ref" [(ngModel)]="referenciaPago" class="form-control"
+            placeholder="Ej: OP-984321 / Lote 45">
+        </div>
+      </div>
+    </div>
+
+    <!-- Pie del Modal -->
+    <div class="modal-footer payment-modal-footer">
+      <button type="button" class="btn-cancel-order-trigger" *ngIf="puedeAnularPedido() && pedido"
+        (click)="alAnular()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="icon-sm">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="15" y1="9" x2="9" y2="15" />
+          <line x1="9" y1="9" x2="15" y2="15" />
+        </svg>
+        Anular Comanda
+      </button>
+      <div class="payment-modal-footer-actions">
+        <button class="btn-modal secundario" (click)="alCerrar()" [disabled]="estaProcesandoPago">Cancelar</button>
+        <button class="btn-modal btn-confirm-pay" [class.blocked-btn]="!estaComandaCompletamenteServida(pedido)"
+          [disabled]="estaProcesandoPago || !estaComandaCompletamenteServida(pedido) || (metodoPago === 'EFECTIVO' && efectivoRecibido < (pedido.total || 0))"
+          (click)="confirmarPago()">
+          <span *ngIf="!estaProcesandoPago && estaComandaCompletamenteServida(pedido)">Confirmar Cobro y Liberar Mesa</span>
+          <span *ngIf="!estaProcesandoPago && !estaComandaCompletamenteServida(pedido)">Cobro Bloqueado: Pendiente de Servir</span>
+          <span *ngIf="estaProcesandoPago">Procesando pago...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

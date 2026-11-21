@@ -1,0 +1,92 @@
+<!-- MODAL DE DETALLE DE PEDIDO / HISTORIAL -->
+<div class="modal-overlay fade-in" *ngIf="estaAbierto && venta">
+  <div class="glass-modal modal-venta-detalle">
+    <div class="modal-header">
+      <div class="modal-title-box">
+        <h3>Detalle de Pedido #{{ venta.pedidoId }}</h3>
+        <span class="badge-order-status" [ngClass]="(venta.estado || 'PENDIENTE').toLowerCase()">
+          <span *ngIf="venta.estado === 'PAGADO'">● Cobrado</span>
+          <span *ngIf="venta.estado === 'ANULADO'">✕ Anulado</span>
+          <span *ngIf="venta.estado === 'EN_PROCESO'">⏳ En Cocina</span>
+          <span *ngIf="venta.estado === 'LISTO'">✓ Listo</span>
+          <span *ngIf="venta.estado === 'PENDIENTE_PAGO'">💳 En Caja</span>
+        </span>
+        <span class="badge-modal-pago" *ngIf="venta.estado === 'PAGADO'"
+          [ngClass]="(venta.metodoPago || 'EFECTIVO').toLowerCase()">
+          {{ venta.metodoPago }}
+        </span>
+      </div>
+      <button class="btn-close-modal" (click)="alCerrar()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="venta-info-grid">
+        <div class="info-block">
+          <span class="info-lbl">{{ venta.estado === 'PAGADO' ? 'Fecha y Hora de Pago:' : 'Fecha de Registro:' }}</span>
+          <span class="info-val">{{ (venta.fechaPago || venta.fechaCreacion) | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+        </div>
+        <div class="info-block">
+          <span class="info-lbl">Ubicación / Mesa:</span>
+          <span class="info-val">{{ venta.mesaNumero ? 'Mesa ' + venta.mesaNumero : (venta.esDelivery ? 'Delivery' : 'Mostrador') }}</span>
+        </div>
+        <div class="info-block">
+          <span class="info-lbl">Cliente:</span>
+          <span class="info-val">{{ venta.clienteNombre || 'Comensal General' }}</span>
+        </div>
+        <div class="info-block">
+          <span class="info-lbl">Atendido por:</span>
+          <span class="info-val">{{ venta.meseroNombre || 'Sin asignar' }}</span>
+        </div>
+        <div class="info-block" *ngIf="venta.referenciaPago">
+          <span class="info-lbl">Referencia / Operación:</span>
+          <span class="info-val">{{ venta.referenciaPago }}</span>
+        </div>
+      </div>
+
+      <div class="items-table-header">
+        <h4>Platos y Bebidas del Pedido ({{ venta.detalles.length }})</h4>
+      </div>
+
+      <div class="venta-items-table-wrap">
+        <table class="venta-items-table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">Cant.</th>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th style="text-align: right;">P. Unit.</th>
+              <th style="text-align: right;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of venta.detalles">
+              <td class="item-qty-cell"><strong>{{ item.cantidad }}x</strong></td>
+              <td>
+                <span class="prod-title">{{ item.productoNombre }}</span>
+                <div class="item-obs-pill" *ngIf="item.modificacion">Nota: "{{ item.modificacion }}"</div>
+              </td>
+              <td><span class="badge-cat">{{ item.categoriaNombre || 'General' }}</span></td>
+              <td style="text-align: right;">${{ item.precioUnitario | number:'1.2-2' }}</td>
+              <td style="text-align: right;" class="item-subtotal-cell">
+                <strong>${{ (item.subtotal || (item.precioUnitario * item.cantidad)) | number:'1.2-2' }}</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="venta-total-summary">
+        <div class="total-row">
+          <span>{{ venta.estado === 'PAGADO' ? 'Total Cobrado:' : 'Total de la Comanda:' }}</span>
+          <span class="total-amount" [ngClass]="{'total-anulado-text': venta.estado === 'ANULADO'}">
+            ${{ (venta.montoPagado || venta.total) | number:'1.2-2' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-modal secundario" (click)="alCerrar()">Cerrar</button>
+    </div>
+  </div>
+</div>

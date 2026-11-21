@@ -1,0 +1,118 @@
+<!-- BANDEJA DE COBROS Y CAJA (ROL CAJERO Y ADMIN) -->
+<div class="dashboard-view">
+  <div class="caja-view-header">
+    <div>
+      <h2>Bandeja de Cobros y Caja</h2>
+      <p class="subtitle">Gestión de cuentas por cobrar y liquidación de mesas con pre-cuenta solicitada.</p>
+    </div>
+    <div class="caja-header-actions">
+      <span class="badge-pending-total" *ngIf="pendientesPago.length > 0">
+        {{ pendientesPago.length }} cuenta(s) pendiente(s)
+      </span>
+      <button class="btn-refresh-caja" (click)="cargarPendientesPago()" title="Actualizar lista de cobros">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" class="icon-sm">
+          <polyline points="23 4 23 10 17 10" />
+          <polyline points="1 20 1 14 7 14" />
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+        </svg>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="cargandoPendientes">
+    <p>Cargando cuentas pendientes de cobro...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="caja-empty-state" *ngIf="!cargandoPendientes && pendientesPago.length === 0">
+    <div class="empty-icon-box">🧾</div>
+    <h3>No hay cuentas pendientes de cobro</h3>
+    <p>Las mesas aparecerán aquí automáticamente en tiempo real en cuanto los meseros hagan clic en
+      <strong>"Solicitar Pre-cuenta a Caja"</strong>.
+    </p>
+  </div>
+
+  <!-- Grid de Cuentas Pendientes -->
+  <div class="pending-payments-grid" *ngIf="!cargandoPendientes && pendientesPago.length > 0">
+    <div class="payment-card" *ngFor="let order of pendientesPago"
+      [class.delivery-pending]="!estaPedidoTotalmenteEntregado(order)">
+      <div class="payment-card-header">
+        <div class="table-badge-box">
+          <span class="table-pill">Mesa {{ order.mesaNumero }}</span>
+          <span class="order-id-tag">Pedido #{{ order.id }}</span>
+        </div>
+        <span class="status-badge-delivered ready" *ngIf="estaPedidoTotalmenteEntregado(order)">
+          Listo para Cobrar
+        </span>
+        <span class="status-badge-delivered pending" *ngIf="!estaPedidoTotalmenteEntregado(order)">
+          {{ obtenerCantidadItemsPendientes(order) }} por servir
+        </span>
+      </div>
+
+      <div class="payment-card-body">
+        <div class="payment-meta-row">
+          <span class="meta-label">Cliente:</span>
+          <span class="meta-value highlight">{{ order.clienteNombre || 'Comensal' }}</span>
+        </div>
+        <div class="payment-meta-row">
+          <span class="meta-label">Atiende:</span>
+          <span class="meta-value">{{ order.meseroNombre || 'Mesero' }}</span>
+        </div>
+        <div class="payment-meta-row">
+          <span class="meta-label">Hora:</span>
+          <span class="meta-value">{{ order.fechaCreacion | date:'shortTime' }}</span>
+        </div>
+
+        <!-- Resumen de items -->
+        <div class="payment-items-summary">
+          <div class="summary-title">Consumo ({{ order.detalles?.length || 0 }} productos):</div>
+          <div class="payment-items-scroll">
+            <div class="payment-item-mini" *ngFor="let item of order.detalles">
+              <span class="mini-qty">{{ item.cantidad }}x</span>
+              <span class="mini-name">{{ item.productoNombre }}</span>
+              <span class="mini-delivery-badge"
+                [class.delivered]="item.requiereCoccion ? (item.checkCocina && item.checkMesero) : item.checkMesero"
+                [class.partial]="item.requiereCoccion ? (!item.checkCocina || !item.checkMesero) : !item.checkMesero">
+                <ng-container *ngIf="item.requiereCoccion">
+                  <span *ngIf="item.checkCocina && item.checkMesero">Servido</span>
+                  <span *ngIf="item.checkCocina && !item.checkMesero">Listo cocina (Por servir)</span>
+                  <span *ngIf="!item.checkCocina && (item.cantidadLista || 0) > 0">Cocina {{ item.cantidadLista }}/{{ item.cantidad }}</span>
+                  <span *ngIf="!item.checkCocina && (!item.cantidadLista || item.cantidadLista === 0)">En cocina</span>
+                </ng-container>
+                <ng-container *ngIf="!item.requiereCoccion">
+                  {{ item.checkMesero ? 'Servido' : 'Por servir' }}
+                </ng-container>
+              </span>
+              <span class="mini-price">${{ item.subtotal | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="payment-card-footer">
+        <div class="payment-total-box">
+          <span class="total-caption">Total a Cobrar:</span>
+          <span class="total-figure">${{ order.total | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="payment-card-actions">
+          <button class="btn-cancel-card-action" *ngIf="puedeAnularPedido()" (click)="alAnular(order)"
+            title="Anular comanda permanentemente">
+            Anular
+          </button>
+          <button class="btn-ticket-preview" (click)="alPreTicket(order)" title="Ver / Imprimir Pre-cuenta">
+            Pre-cuenta
+          </button>
+          <button class="btn-liquidate" [class.blocked]="!estaPedidoTotalmenteEntregado(order)"
+            (click)="alCobrar(order)">
+            <span *ngIf="estaPedidoTotalmenteEntregado(order)">Cobrar Cuenta</span>
+            <span *ngIf="!estaPedidoTotalmenteEntregado(order)">Cobro Bloqueado</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

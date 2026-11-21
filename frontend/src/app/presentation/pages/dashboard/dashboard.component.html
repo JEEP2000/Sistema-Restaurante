@@ -1,0 +1,342 @@
+<div class="dashboard-layout">
+  <!-- BARRA DE NAVEGACIÓN MÓVIL (VISIBLE EN PANTALLAS ≤ 992px) -->
+  <header class="mobile-navbar">
+    <button class="btn-hamburger" (click)="toggleMenuMovil()" aria-label="Abrir Menú">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-hamburger">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <div class="mobile-brand">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ff7e47" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mobile-brand-icon">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+      </svg>
+      <span class="mobile-brand-title">North Chicken</span>
+    </div>
+    <div class="mobile-user-chip" *ngIf="perfil" (click)="toggleMenuMovil()">
+      <span class="mobile-user-avatar">{{ perfil.nombre ? perfil.nombre.charAt(0).toUpperCase() : 'U' }}</span>
+    </div>
+  </header>
+
+  <!-- OVERLAY OSCURO PARA CIERRE AL TOCAR FUERA DEL SIDEBAR EN MÓVIL -->
+  <div class="sidebar-backdrop" *ngIf="menuMovilAbierto" (click)="cerrarMenuMovil()"></div>
+
+  <!-- SIDEBAR (BARRA DE NAVEGACIÓN LATERAL / CAJÓN EN MÓVILES) -->
+  <aside class="sidebar" [class.sidebar-open]="menuMovilAbierto">
+    <div class="brand">
+      <div class="brand-info-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ff7e47" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="brand-icon">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+        <span class="brand-name">North Chicken</span>
+      </div>
+      <button class="btn-close-sidebar-mobile" (click)="cerrarMenuMovil()" aria-label="Cerrar Menú">
+        &times;
+      </button>
+    </div>
+
+
+    <!-- Widget de Usuario y Rol -->
+    <div class="user-profile-widget" *ngIf="perfil">
+      <div class="avatar">{{ perfil.nombre ? perfil.nombre.charAt(0).toUpperCase() : 'U' }}</div>
+      <div class="user-details">
+        <span class="user-name">{{ perfil.nombre }}</span>
+        <span class="role-badge" [ngClass]="obtenerClaseRol(perfil.rolNombre)">{{ perfil.rolNombre }}</span>
+      </div>
+    </div>
+
+    <!-- Menú de Vistas según Rol -->
+    <nav class="sidebar-nav">
+      <!-- 1. Resumen / Analytics -->
+      <button class="nav-item" [class.active]="vistaActual === 'general'" (click)="establecerVista('general')"
+        *ngIf="puedeVerResumen()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="icon-nav">
+          <rect x="3" y="3" width="7" height="9" />
+          <rect x="14" y="3" width="7" height="5" />
+          <rect x="14" y="12" width="7" height="9" />
+          <rect x="3" y="16" width="7" height="5" />
+        </svg>
+        Resumen
+      </button>
+
+      <!-- 2. Mesas y Comandas -->
+      <button class="nav-item" [class.active]="vistaActual === 'tables'" (click)="establecerVista('tables')">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="icon-nav">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M3 9h18M9 21V9" />
+        </svg>
+        Mesas y Comandas
+      </button>
+
+      <!-- 3. Caja y Cobros -->
+      <button class="nav-item" [class.active]="vistaActual === 'caja'" (click)="establecerVista('caja')" *ngIf="puedeVerCaja()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="icon-nav">
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <line x1="2" y1="10" x2="22" y2="10" />
+        </svg>
+        Caja y Cobros
+        <span class="badge-count" *ngIf="cantidadPendientesPago > 0">{{ cantidadPendientesPago }}</span>
+      </button>
+
+      <!-- 4. Historial de Ventas / Pedidos -->
+      <button class="nav-item" [class.active]="vistaActual === 'ventas'" (click)="establecerVista('ventas')"
+        *ngIf="puedeVerVentas()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="icon-nav">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
+        </svg>
+        <span *ngIf="puedeVerKpisFinancieros()">Historial Ventas</span>
+        <span *ngIf="!puedeVerKpisFinancieros()">Historial Pedidos</span>
+      </button>
+
+      <!-- 5. Cocina / KDS -->
+      <button class="nav-item" [class.active]="vistaActual === 'kitchen'" (click)="establecerVista('kitchen')"
+        *ngIf="puedeVerCocina()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="icon-nav">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+        Cocina
+        <span class="badge-count" *ngIf="cantidadPlatosPendientesCocina > 0">{{ cantidadPlatosPendientesCocina }}</span>
+      </button>
+
+      <!-- 6. Personal -->
+      <button class="nav-item" [class.active]="vistaActual === 'personal'" (click)="establecerVista('personal')"
+        *ngIf="puedeGestionarPersonal()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="icon-nav">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+        Personal
+      </button>
+
+      <!-- 7. Carta, Menú y Promociones -->
+      <button class="nav-item" [class.active]="vistaActual === 'menu'" (click)="establecerVista('menu')"
+        *ngIf="puedeGestionarMenu()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="icon-nav">
+          <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+          <line x1="6" y1="1" x2="6" y2="4" />
+          <line x1="10" y1="1" x2="10" y2="4" />
+          <line x1="14" y1="1" x2="14" y2="4" />
+        </svg>
+        Carta y Menú
+      </button>
+
+      <!-- 8. Sucursales -->
+      <button class="nav-item" [class.active]="vistaActual === 'sucursales'" (click)="establecerVista('sucursales')"
+        *ngIf="puedeGestionarSucursales()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="icon-nav">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+        Sucursales
+      </button>
+    </nav>
+
+    <!-- Footer de Sesión -->
+    <div class="sidebar-footer">
+      <button class="btn-logout" (click)="cerrarSesion()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="icon-nav">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+        </svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main-content">
+    <!-- HEADER -->
+    <header class="content-header">
+      <div class="header-welcome" *ngIf="perfil">
+        <h1>Hola, ¡buen día!</h1>
+        <div class="branch-indicator">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="icon-sm">
+            <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          <ng-container *ngIf="perfil.rolNombre === 'Dueño' || perfil.rolNombre === 'SuperAdmin'; else branchText">
+            <div class="branch-selector-wrapper">
+              <span>Sede activa:</span>
+              <select class="branch-select-header" [(ngModel)]="sucursalSeleccionadaId"
+                (ngModelChange)="alCambiarSucursal($event)">
+                <option *ngFor="let suc of listaSucursales" [value]="suc.id">{{ suc.nombre }}</option>
+              </select>
+            </div>
+          </ng-container>
+          <ng-template #branchText>
+            Trabajando en: <strong>{{ perfil?.sucursalNombre || obtenerNombreSucursal(perfil?.sucursalId) }}</strong>
+          </ng-template>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="system-status online">
+          <span class="pulse-dot"></span>
+          Servidor Backend Online
+        </span>
+      </div>
+    </header>
+
+    <!-- VISTAS MODULARES EN ESPAÑOL -->
+
+    <!-- 1. RESUMEN / ANALÍTICA (Solo Admin y Dueño) -->
+    <app-analitica-resumen
+      *ngIf="puedeVerResumen() && vistaActual === 'general'"
+      [sucursalId]="sucursalSeleccionadaId"
+      [perfil]="perfil"
+      [estadisticas]="estadisticas"
+      (navegarA)="establecerVista($event)">
+    </app-analitica-resumen>
+
+    <!-- 2. MAPA DE MESAS -->
+    <app-mapa-mesas
+      *ngIf="vistaActual === 'tables'"
+      [mesas]="mesas"
+      [perfil]="perfil"
+      [sucursalId]="sucursalSeleccionadaId"
+      (seleccionarMesa)="alSeleccionarMesa($event)"
+      (abrirCrearMesa)="abrirModalCrearMesa()">
+    </app-mapa-mesas>
+
+    <!-- 3. COCINA (KDS) -->
+    <app-cocina-kds
+      *ngIf="vistaActual === 'kitchen' && puedeVerCocina()"
+      [sucursalId]="sucursalSeleccionadaId"
+      [perfil]="perfil"
+      [listaSucursales]="listaSucursales">
+    </app-cocina-kds>
+
+    <!-- 4. BANDEJA DE COBROS Y CAJA -->
+    <app-caja-cobros
+      *ngIf="puedeVerCaja() && vistaActual === 'caja'"
+      [sucursalId]="sucursalSeleccionadaId"
+      [perfil]="perfil"
+      (abrirCobro)="abrirModalCobro($event)"
+      (abrirPreTicket)="abrirModalPreTicket($event)"
+      (abrirAnulacion)="abrirModalAnularPedido($event)">
+    </app-caja-cobros>
+
+    <!-- 5. HISTORIAL DE VENTAS Y REPORTES -->
+    <app-historial-ventas
+      *ngIf="puedeVerVentas() && vistaActual === 'ventas'"
+      [sucursalId]="sucursalSeleccionadaId"
+      [perfil]="perfil"
+      (abrirDetalle)="alVerDetalleVenta($event)">
+    </app-historial-ventas>
+
+    <!-- 6. GESTIÓN DE PERSONAL -->
+    <app-gestion-personal
+      *ngIf="vistaActual === 'personal' && puedeGestionarPersonal()"
+      [sucursalId]="sucursalSeleccionadaId"
+      [perfil]="perfil"
+      [listaSucursales]="listaSucursales">
+    </app-gestion-personal>
+
+    <!-- 7. GESTIÓN DE SUCURSALES -->
+    <app-gestion-sucursales
+      *ngIf="vistaActual === 'sucursales' && puedeGestionarSucursales()"
+      [listaSucursales]="listaSucursales"
+      [perfil]="perfil"
+      (sucursalesActualizadas)="cargarSucursales()">
+    </app-gestion-sucursales>
+
+    <!-- 8. GESTIÓN DE CARTA, MENÚ Y PROMOCIONES -->
+    <app-gestion-menu
+      *ngIf="vistaActual === 'menu' && puedeGestionarMenu()"
+      [sucursalId]="sucursalSeleccionadaId"
+      [perfil]="perfil"
+      [listaSucursales]="listaSucursales">
+    </app-gestion-menu>
+  </main>
+
+  <!-- MODALES DE NEGOCIO EN ESPAÑOL -->
+
+  <!-- Modal 1: Crear Mesa -->
+  <app-crear-mesa-modal
+    [estaAbierto]="mostrarModalCrearMesa"
+    [sucursalId]="sucursalSeleccionadaId"
+    [listaSucursales]="listaSucursales"
+    [mesas]="mesas"
+    [perfil]="perfil"
+    (cerrar)="mostrarModalCrearMesa = false"
+    (mesaCreada)="alCrearMesa($event)">
+  </app-crear-mesa-modal>
+
+  <!-- Modal 2: Tomar Pedido -->
+  <app-tomar-pedido-modal
+    [estaAbierto]="mostrarModalTomarPedido"
+    [mesa]="mesaSeleccionada"
+    [sucursalId]="sucursalSeleccionadaId"
+    [sucursalNombre]="obtenerNombreSucursal(sucursalSeleccionadaId)"
+    (cerrar)="mostrarModalTomarPedido = false"
+    (pedidoCreado)="alCrearPedido()">
+  </app-tomar-pedido-modal>
+
+  <!-- Modal 3: Pedido Activo / Pre-cuenta -->
+  <app-pedido-activo-modal
+    [estaAbierto]="mostrarModalPedidoActivo"
+    [mesa]="mesaSeleccionada"
+    [perfil]="perfil"
+    [sucursalId]="sucursalSeleccionadaId"
+    [sucursalNombre]="obtenerNombreSucursal(sucursalSeleccionadaId)"
+    (cerrar)="mostrarModalPedidoActivo = false"
+    (pedidoActualizado)="alActualizarPedido()"
+    (abrirAnularPedido)="abrirModalAnularPedido($event)">
+  </app-pedido-activo-modal>
+
+  <!-- Modal 4: Cobro / Liquidación -->
+  <app-cobro-pago-modal
+    [estaAbierto]="mostrarModalCobro"
+    [pedido]="pedidoParaCobro"
+    [perfil]="perfil"
+    (cerrar)="mostrarModalCobro = false"
+    (pagoProcesado)="alProcesarPago()"
+    (abrirAnularPedido)="abrirModalAnularPedido($event)">
+  </app-cobro-pago-modal>
+
+  <!-- Modal 5: Anular Comanda -->
+  <app-anular-pedido-modal
+    [estaAbierto]="mostrarModalAnularPedido"
+    [pedido]="pedidoParaAnular"
+    [mesa]="mesaSeleccionada"
+    (cerrar)="mostrarModalAnularPedido = false"
+    (pedidoAnulado)="alAnularPedido()">
+  </app-anular-pedido-modal>
+
+  <!-- Modal 6: Tirilla Térmica de Pre-cuenta -->
+  <app-ticket-termico-modal
+    [estaAbierto]="mostrarModalPreTicket"
+    [pedido]="pedidoParaTicket"
+    [sucursalNombre]="obtenerNombreSucursal(pedidoParaTicket?.sucursalId || sucursalSeleccionadaId)"
+    [empresaNombre]="obtenerSucursalActiva(pedidoParaTicket?.sucursalId)?.empresaNombre || 'Restaurante'"
+    [ruc]="obtenerSucursalActiva(pedidoParaTicket?.sucursalId)?.ruc || ''"
+    [sucursalDireccion]="obtenerSucursalActiva(pedidoParaTicket?.sucursalId)?.direccion || ''"
+    [perfil]="perfil"
+    (cerrar)="mostrarModalPreTicket = false">
+  </app-ticket-termico-modal>
+
+
+  <!-- Modal 7: Detalle de Venta Histórica -->
+  <app-detalle-pedido-modal
+    [estaAbierto]="ventaDetalleSeleccionada !== null"
+    [venta]="ventaDetalleSeleccionada"
+    (cerrar)="ventaDetalleSeleccionada = null">
+  </app-detalle-pedido-modal>
+</div>

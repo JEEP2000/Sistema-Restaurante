@@ -1,0 +1,1163 @@
+<div class="dashboard-view menu-admin-view fade-in">
+  <!-- ENCABEZADO Y ACCIONES PRINCIPALES -->
+  <div class="view-header-actions menu-header-actions">
+    <div class="view-header">
+      <div class="header-title-badge-row">
+        <h2>Carta, Menú y Promociones</h2>
+        <span class="sede-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs">
+            <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          {{ obtenerNombreSucursal(sucursalId) }}
+        </span>
+      </div>
+      <p>Administra la carta oficial, activa los platos del día, crea combos en promoción y gestiona insumos.</p>
+    </div>
+
+    <div class="header-quick-buttons">
+      <button class="btn-primary-action" *ngIf="subPestanaActual === 'platos'" (click)="abrirCrearPlato()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Nuevo Plato
+      </button>
+
+      <button class="btn-primary-action btn-promo-action" *ngIf="subPestanaActual === 'promos'" (click)="abrirCrearPromo()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Nueva Promoción / Combo
+      </button>
+
+      <button class="btn-primary-action" *ngIf="subPestanaActual === 'categorias'" (click)="abrirCrearCategoria()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Nueva Categoría
+      </button>
+
+      <button class="btn-primary-action" *ngIf="subPestanaActual === 'insumos'" (click)="abrirCrearInsumo()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Nuevo Insumo
+      </button>
+    </div>
+  </div>
+
+  <!-- MENSAJES TOAST NOTIFICACIONES -->
+  <div class="alert alert-success menu-toast-banner fade-in" *ngIf="mensajeExito">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+    <span>{{ mensajeExito }}</span>
+  </div>
+
+  <div class="alert alert-error menu-toast-banner fade-in" *ngIf="mensajeError">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+    <span>{{ mensajeError }}</span>
+  </div>
+
+  <!-- TARJETAS DE MÉTRICAS KPI -->
+  <div class="menu-kpi-grid">
+    <div class="menu-kpi-card" [class.kpi-active]="subPestanaActual === 'platos'" (click)="cambiarPestana('platos')">
+      <div class="kpi-info">
+        <span class="kpi-label">Platos en Carta</span>
+        <div class="kpi-value-row">
+          <strong class="kpi-number">{{ cantidadPlatosTotal }}</strong>
+          <span class="kpi-subtext">({{ cantidadPlatosActivos }} activos)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-kpi-card highlight-gold" [class.kpi-active]="subPestanaActual === 'menu_dia'" (click)="cambiarPestana('menu_dia')">
+      <div class="kpi-info">
+        <span class="kpi-label">Menú del Día</span>
+        <div class="kpi-value-row">
+          <strong class="kpi-number text-gold">{{ cantidadMenuDelDia }}</strong>
+          <span class="kpi-subtext">destacados</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-kpi-card" [class.kpi-active]="subPestanaActual === 'promos'" (click)="cambiarPestana('promos')">
+      <div class="kpi-info">
+        <span class="kpi-label">Promociones y Combos</span>
+        <div class="kpi-value-row">
+          <strong class="kpi-number">{{ cantidadPromosActivas }}</strong>
+          <span class="kpi-subtext">activas</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-kpi-card" [class.kpi-active]="subPestanaActual === 'categorias'" (click)="cambiarPestana('categorias')">
+      <div class="kpi-info">
+        <span class="kpi-label">Categorías</span>
+        <div class="kpi-value-row">
+          <strong class="kpi-number">{{ listaCategorias.length }}</strong>
+          <span class="kpi-subtext">tipos de plato</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-kpi-card" [class.kpi-active]="subPestanaActual === 'insumos'" (click)="cambiarPestana('insumos')">
+      <div class="kpi-info">
+        <span class="kpi-label">Insumos</span>
+        <div class="kpi-value-row">
+          <strong class="kpi-number">{{ listaInsumos.length }}</strong>
+          <span class="kpi-subtext">ingredientes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 1. PESTAÑA: PLATOS Y CARTA COMPLETA -->
+  <!-- ===================================================================== -->
+  <div class="menu-tab-content fade-in" *ngIf="subPestanaActual === 'platos'">
+    <!-- FILTROS Y BÚSQUEDA -->
+    <div class="menu-toolbar-card">
+      <div class="toolbar-search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-search">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar plato por nombre, descripción o categoría..."
+          [(ngModel)]="busquedaPlato"
+          class="toolbar-input"
+        />
+        <button class="btn-clear-search" *ngIf="busquedaPlato" (click)="busquedaPlato = ''">&times;</button>
+      </div>
+
+      <div class="toolbar-filter-group">
+        <div class="filter-item">
+          <label>Categoría:</label>
+          <select [(ngModel)]="filtroCategoriaId" class="toolbar-select">
+            <option [ngValue]="null">Todas las Categorías</option>
+            <option *ngFor="let cat of listaCategorias" [ngValue]="cat.id">{{ cat.nombre }}</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label>Disponibilidad:</label>
+          <select [(ngModel)]="filtroEstadoPlato" class="toolbar-select">
+            <option value="todos">Todos los Estados</option>
+            <option value="activos">Solo Disponibles</option>
+            <option value="ocultos">Solo Agotados</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLA DE PLATOS -->
+    <div class="menu-table-container">
+      <table class="menu-admin-table">
+        <thead>
+          <tr>
+            <th>Plato / Detalle</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Cocina / Tiempo</th>
+            <th class="text-center" title="Indica el alcance del plato en la red de sucursales">Alcance Sedes</th>
+            <th class="text-center" title="Aparece con prioridad como recomendación del día en esta sede">Menú del Día</th>
+            <th class="text-center" title="Controla la disponibilidad del plato para los pedidos en esta sede">Disponibilidad</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let plato of platosFiltrados" [class.row-hidden]="!plato.activo" [class.row-agotado]="!plato.activo">
+            <td>
+              <div class="dish-item-col">
+                <div class="dish-thumb" [style.backgroundImage]="plato.imagenUrl ? 'url(' + plato.imagenUrl + ')' : 'none'">
+                  <span *ngIf="!plato.imagenUrl" class="dish-avatar-letter">{{ plato.nombre.charAt(0).toUpperCase() }}</span>
+                </div>
+                <div class="dish-text">
+                  <div class="dish-title-row">
+                    <strong class="dish-title-text">{{ plato.nombre }}</strong>
+                  </div>
+                  <span class="dish-desc">{{ plato.descripcion || 'Sin descripción' }}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="category-tag">{{ plato.categoriaNombre || 'General' }}</span>
+            </td>
+            <td>
+              <div class="dish-price-wrap">
+                <span class="currency-tag">S/</span>
+                <span class="dish-price-val">{{ plato.precio | number:'1.2-2' }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="prep-info">
+                <span class="badge-cocina" [class.badge-bar]="!plato.requiereCoccion">
+                  {{ plato.requiereCoccion ? 'Cocina' : 'Bar / Entrega' }}
+                </span>
+                <span class="time-tag">{{ plato.tiempoEstimado || 12 }} min</span>
+              </div>
+            </td>
+            <!-- ALCANCE SEDES (NUEVA COLUMNA DEDICADA) -->
+            <td class="text-center">
+              <span class="badge-sede-summary" 
+                    *ngIf="plato.disponibilidad && plato.disponibilidad.length > 0; else fallbackSedePlato"
+                    [class.summary-all]="esTodasLasSedes(plato)"
+                    [class.summary-partial]="!esTodasLasSedes(plato)"
+                    [title]="getDetalleSedesTooltip(plato)">
+                {{ getTextoSedes(plato) }}
+              </span>
+              <ng-template #fallbackSedePlato>
+                <span class="badge-sede-summary summary-all" title="Disponible en todas las sedes">
+                  Todas las sedes
+                </span>
+              </ng-template>
+            </td>
+            <!-- TOGGLE MENÚ DEL DÍA CON 1 CLIC -->
+            <td class="text-center">
+              <button
+                class="btn-toggle-switch"
+                [class.active-gold]="plato.esMenuDelDia"
+                (click)="alternarMenuDelDia(plato, $event)"
+                [title]="plato.esMenuDelDia ? 'Clic para quitar del Menú del Día de esta sede' : 'Clic para incluir en el Menú del Día de esta sede'"
+              >
+                <span class="toggle-knob"></span>
+                <span class="toggle-text">{{ plato.esMenuDelDia ? 'Sí' : 'No' }}</span>
+              </button>
+            </td>
+            <!-- TOGGLE DISPONIBILIDAD CON 1 CLIC (DISPONIBLE / AGOTADO) -->
+            <td class="text-center">
+              <button
+                class="btn-toggle-switch"
+                [class.active-green]="plato.activo"
+                [class.switch-agotado]="!plato.activo"
+                (click)="alternarActivoPlato(plato, $event)"
+                [title]="plato.activo ? 'Clic para marcar como AGOTADO en esta sede' : 'Clic para marcar como DISPONIBLE en esta sede'"
+              >
+                <span class="toggle-knob"></span>
+                <span class="toggle-text">{{ plato.activo ? 'Disponible' : 'Agotado' }}</span>
+              </button>
+            </td>
+            <!-- ACCIONES -->
+            <td class="text-right">
+              <div class="menu-action-buttons">
+                <button class="btn-table-edit" (click)="abrirEditarPlato(plato)" title="Editar Plato">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="platosFiltrados.length === 0">
+            <td colspan="8" class="empty-table-cell">
+              <div class="empty-state-box">
+                <p>No se encontraron platos con los filtros actuales.</p>
+                <button class="btn-outline-action" (click)="abrirCrearPlato()">Registrar un plato</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 2. PESTAÑA: MENÚ DEL DÍA (VISTA CURADA Y RÁPIDA) -->
+  <!-- ===================================================================== -->
+  <div class="menu-tab-content fade-in" *ngIf="subPestanaActual === 'menu_dia'">
+    <!-- BANNER EXPLICATIVO -->
+    <div class="menu-dia-banner">
+      <div class="banner-icon-col">
+        <div class="banner-star-circle">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon-md">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+        </div>
+      </div>
+      <div class="banner-text-col">
+        <h3>Platos Destacados en el Menú del Día</h3>
+        <p>
+          Los platos marcados aquí se resaltan en la pantalla de toma de pedidos para los meseros y aparecen con insignia especial.
+          Puedes activar o desactivar platos del menú del día con un solo clic.
+        </p>
+      </div>
+      <div class="banner-btn-col">
+        <button class="btn-outline-action" (click)="cambiarPestana('platos')">
+          Ver Carta de Platos
+        </button>
+      </div>
+    </div>
+
+    <!-- TARJETAS DEL MENÚ DEL DÍA -->
+    <div class="menu-dia-cards-grid" *ngIf="platosMenuDelDia.length > 0">
+      <div class="dish-card-gold" *ngFor="let plato of platosMenuDelDia">
+        <div class="dish-card-header">
+          <span class="badge-gold-banner">Menú del Día</span>
+          <span class="category-badge">{{ plato.categoriaNombre || 'Carta' }}</span>
+        </div>
+        <div class="dish-card-body">
+          <h4 class="dish-name">{{ plato.nombre }}</h4>
+          <p class="dish-desc">{{ plato.descripcion || 'Especial preparado fresco para la atención del día.' }}</p>
+          <div class="dish-meta-row">
+            <span class="dish-card-price">S/ {{ plato.precio | number:'1.2-2' }}</span>
+            <span class="dish-card-time">{{ plato.tiempoEstimado || 12 }} min</span>
+          </div>
+        </div>
+        <div class="dish-card-footer">
+          <button class="btn-remove-menu-dia" (click)="alternarMenuDelDia(plato, $event)" title="Quitar del menú de hoy">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            Quitar de Menú del Día
+          </button>
+          <button class="btn-table-edit" (click)="abrirEditarPlato(plato)" title="Editar Plato">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESTADO VACÍO MENÚ DEL DÍA -->
+    <div class="empty-state-box large-box" *ngIf="platosMenuDelDia.length === 0">
+      <h4>Aún no has seleccionado platos para el Menú del Día</h4>
+      <p>Ve a la pestaña <strong>"Platos y Carta"</strong> y activa el interruptor de la columna <strong>"Menú del Día"</strong> para destacar los platos de hoy.</p>
+      <button class="btn-primary-action" (click)="cambiarPestana('platos')">
+        Ir a Platos y Carta
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 3. PESTAÑA: PROMOCIONES Y COMBOS -->
+  <!-- ===================================================================== -->
+  <div class="menu-tab-content fade-in" *ngIf="subPestanaActual === 'promos'">
+    <!-- TOOLBAR PROMOS -->
+    <div class="menu-toolbar-card">
+      <div class="toolbar-search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-search">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar promoción o combo por nombre..."
+          [(ngModel)]="busquedaPromo"
+          class="toolbar-input"
+        />
+        <button class="btn-clear-search" *ngIf="busquedaPromo" (click)="busquedaPromo = ''">&times;</button>
+      </div>
+    </div>
+
+    <!-- GRID DE PROMOCIONES -->
+    <div class="promos-grid" *ngIf="promocionesFiltradas.length > 0">
+      <div class="promo-card" *ngFor="let promo of promocionesFiltradas" [class.promo-inactive]="!promo.activo">
+        <!-- CABECERA DE LA PROMO -->
+        <div class="promo-card-top">
+          <div class="promo-badge-stack">
+            <span class="promo-badge-sale" *ngIf="promo.descuentoPorcentaje && promo.descuentoPorcentaje > 0">
+              -{{ promo.descuentoPorcentaje }}% OFF
+            </span>
+            <span class="promo-badge-featured" *ngIf="promo.destacado">Destacada</span>
+            <span class="badge-sede-summary"
+                  *ngIf="promo.disponibilidad && promo.disponibilidad.length > 1"
+                  [class.summary-all]="esTodasLasSedes(promo)"
+                  [class.summary-partial]="!esTodasLasSedes(promo)"
+                  [title]="getDetalleSedesTooltip(promo)">
+              {{ getTextoSedes(promo) }}
+            </span>
+          </div>
+
+          <!-- TOGGLE ACTIVO PROMO CON 1 CLIC -->
+          <button
+            class="btn-toggle-switch"
+            [class.active-green]="promo.activo"
+            (click)="alternarActivoPromo(promo, $event)"
+            [title]="promo.activo ? 'Clic para pausar promoción' : 'Clic para activar promoción'"
+          >
+            <span class="toggle-knob"></span>
+            <span class="toggle-text">{{ promo.activo ? 'Activa' : 'Pausada' }}</span>
+          </button>
+        </div>
+
+        <!-- CONTENIDO -->
+        <div class="promo-card-content">
+          <h4 class="promo-title">{{ promo.nombre }}</h4>
+          <p class="promo-description">{{ promo.descripcion || 'Combo especial con precio con descuento.' }}</p>
+
+          <!-- ITEMS INCLUIDOS EN EL COMBO -->
+          <div class="promo-included-items" *ngIf="obtenerItemsPromo(promo).length > 0">
+            <span class="included-title">Incluye en el combo:</span>
+            <div class="included-pills-wrap">
+              <span class="combo-item-pill" *ngFor="let it of obtenerItemsPromo(promo)">
+                <strong>{{ it.cantidad }}x</strong> {{ it.nombre }}
+              </span>
+            </div>
+          </div>
+
+          <!-- PRECIOS -->
+          <div class="promo-pricing-box">
+            <div class="promo-price-original" *ngIf="promo.precioOriginal && promo.precioOriginal > promo.precioPromo">
+              <span>Precio regular:</span>
+              <del>S/ {{ promo.precioOriginal | number:'1.2-2' }}</del>
+            </div>
+            <div class="promo-price-final">
+              <span class="price-label">Precio Promo:</span>
+              <strong class="price-value">S/ {{ promo.precioPromo | number:'1.2-2' }}</strong>
+            </div>
+          </div>
+
+          <!-- VIGENCIA -->
+          <div class="promo-validity" *ngIf="promo.fechaFin">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span>Válido hasta: {{ promo.fechaFin }}</span>
+          </div>
+        </div>
+
+        <!-- PIE DE TARJETA -->
+        <div class="promo-card-actions">
+          <button class="btn-promo-edit" (click)="abrirEditarPromo(promo)" title="Editar Promoción">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            Editar
+          </button>
+          <button class="btn-danger-icon" (click)="solicitarEliminarPromo(promo, $event)" title="Eliminar Promoción">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESTADO VACÍO PROMOS -->
+    <div class="empty-state-box large-box" *ngIf="promocionesFiltradas.length === 0">
+      <h4>No hay promociones registradas</h4>
+      <p>Crea ofertas como <em>"Combo Familiar 1 Pollo + Papas + Bebida"</em> o <em>"Almuerzo Ejecutivo"</em> con precios promocionales.</p>
+      <button class="btn-primary-action btn-promo-action" (click)="abrirCrearPromo()">
+        Crear Primera Promoción
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 4. PESTAÑA: CATEGORÍAS (TIPOS DE PLATO) -->
+  <!-- ===================================================================== -->
+  <div class="menu-tab-content fade-in" *ngIf="subPestanaActual === 'categorias'">
+    <div class="menu-table-container">
+      <table class="menu-admin-table">
+        <thead>
+          <tr>
+            <th>Nombre de Categoría</th>
+            <th>Descripción</th>
+            <th>Destino de Despacho</th>
+            <th>Orden Visual</th>
+            <th class="text-center">Estado</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cat of listaCategorias">
+            <td>
+              <div class="cat-title-cell">
+                <strong>{{ cat.nombre }}</strong>
+              </div>
+            </td>
+            <td>{{ cat.descripcion || 'Sin descripción' }}</td>
+            <td>
+              <span class="badge-cocina" [class.badge-bar]="!cat.esCocina">
+                {{ cat.esCocina ? 'Cocina (Platos calientes)' : 'Bar / Barra (Bebidas)' }}
+              </span>
+            </td>
+            <td>
+              <span class="order-badge">#{{ cat.ordenVisual }}</span>
+            </td>
+            <td class="text-center">
+              <button
+                class="btn-toggle-switch"
+                [class.active-green]="cat.activo"
+                (click)="alternarActivoCategoria(cat, $event)"
+              >
+                <span class="toggle-knob"></span>
+                <span class="toggle-text">{{ cat.activo ? 'Activa' : 'Oculta' }}</span>
+              </button>
+            </td>
+            <td class="text-right">
+              <button class="btn-table-edit" (click)="abrirEditarCategoria(cat)" title="Editar Categoría">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 5. PESTAÑA: INSUMOS -->
+  <!-- ===================================================================== -->
+  <div class="menu-tab-content fade-in" *ngIf="subPestanaActual === 'insumos'">
+    <!-- TOOLBAR INSUMOS -->
+    <div class="menu-toolbar-card">
+      <div class="toolbar-search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-search">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar insumo o ingrediente..."
+          [(ngModel)]="busquedaInsumo"
+          class="toolbar-input"
+        />
+        <button class="btn-clear-search" *ngIf="busquedaInsumo" (click)="busquedaInsumo = ''">&times;</button>
+      </div>
+    </div>
+
+    <!-- TABLA INSUMOS -->
+    <div class="menu-table-container">
+      <table class="menu-admin-table">
+        <thead>
+          <tr>
+            <th>Nombre Insumo</th>
+            <th>Unidad de Medida</th>
+            <th>Stock Actual</th>
+            <th>Stock Mínimo</th>
+            <th>Nivel de Alerta</th>
+            <th class="text-center">Estado</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ins of insumosFiltrados">
+            <td>
+              <strong>{{ ins.nombre }}</strong>
+            </td>
+            <td>
+              <span class="unit-pill">{{ ins.unidadMedida }}</span>
+            </td>
+            <td>
+              <strong class="stock-value" [class.stock-danger]="ins.stock <= ins.stockMinimo">
+                {{ ins.stock }} {{ ins.unidadMedida }}
+              </strong>
+            </td>
+            <td>{{ ins.stockMinimo }} {{ ins.unidadMedida }}</td>
+            <td>
+              <span class="status-label" [ngClass]="ins.stock <= ins.stockMinimo ? 'ocupada' : 'libre'">
+                {{ ins.stock <= ins.stockMinimo ? 'Stock Bajo' : 'En Óptimo' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <button
+                class="btn-toggle-switch"
+                [class.active-green]="ins.activo"
+                (click)="alternarActivoInsumo(ins, $event)"
+              >
+                <span class="toggle-knob"></span>
+                <span class="toggle-text">{{ ins.activo ? 'Activo' : 'Pausado' }}</span>
+              </button>
+            </td>
+            <td class="text-right">
+              <button class="btn-table-edit" (click)="abrirEditarInsumo(ins)" title="Editar Insumo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="insumosFiltrados.length === 0">
+            <td colspan="7" class="empty-table-cell">
+              <div class="empty-state-box">
+                <p>No hay insumos registrados en el sistema.</p>
+                <button class="btn-outline-action" (click)="abrirCrearInsumo()">Crear primer insumo</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: CREAR / EDITAR PLATO -->
+  <!-- ===================================================================== -->
+  <div class="modal-overlay fade-in" *ngIf="mostrarModalPlato">
+    <div class="glass-modal modal-form-lg">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div>
+            <h3>{{ modoEdicionPlato ? 'Editar Plato de la Carta' : 'Nuevo Plato en Carta' }}</h3>
+            <p class="modal-subtitle">Configura los datos del producto, asignación de cocina y menú del día.</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" (click)="mostrarModalPlato = false">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>Nombre del Plato *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="formPlato.nombre"
+              placeholder="Ej: 1/4 Pollo a la Brasa con Papas"
+            />
+          </div>
+
+          <div class="form-group flex-1">
+            <label>Categoría / Tipo *</label>
+            <select class="form-control" [(ngModel)]="formPlato.categoriaId">
+              <option *ngFor="let cat of listaCategorias" [value]="cat.id">{{ cat.nombre }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Precio de Venta (S/) *</label>
+            <input
+              type="number"
+              step="0.10"
+              class="form-control text-price-input"
+              [(ngModel)]="formPlato.precio"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div class="form-group flex-1">
+            <label>Tiempo Estimado (Minutos)</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="formPlato.tiempoEstimado"
+              placeholder="12"
+            />
+          </div>
+
+          <div class="form-group flex-1">
+            <label>Lugar de Preparación</label>
+            <select class="form-control" [(ngModel)]="formPlato.requiereCoccion">
+              <option [ngValue]="true">Cocina (Platos calientes)</option>
+              <option [ngValue]="false">Bar / Despacho Inmediato</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción para el Menú / Comensal</label>
+          <textarea
+            class="form-control"
+            rows="2"
+            [(ngModel)]="formPlato.descripcion"
+            placeholder="Detalla guarniciones, salsas, o especificaciones del plato..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>URL de Imagen (Opcional)</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="formPlato.imagenUrl"
+            placeholder="https://ejemplo.com/fotos/plato.jpg"
+          />
+        </div>
+
+        <!-- DESTACADOS Y VISIBILIDAD -->
+        <div class="form-switches-box">
+          <label class="custom-checkbox-row">
+            <input type="checkbox" [(ngModel)]="formPlato.esMenuDelDia" />
+            <div class="checkbox-label-text">
+              <strong>Incluir en el Menú del Día</strong>
+              <p>Resaltará este plato hoy con etiqueta de recomendación preferencial.</p>
+            </div>
+          </label>
+
+          <label class="custom-checkbox-row">
+            <input type="checkbox" [(ngModel)]="formPlato.activo" />
+            <div class="checkbox-label-text">
+              <strong>Plato Disponible para Atención</strong>
+              <p>Si se desmarca, figurará como "Agotado" y no podrá ser ordenado por los meseros.</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- DISPONIBILIDAD POR SEDE / MULTI-SUCURSAL -->
+        <div class="branch-availability-section" *ngIf="sucursalesSeleccionadas && sucursalesSeleccionadas.length > 1">
+          <div class="branch-section-header">
+            <label class="branch-section-title">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs-inline">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              Disponibilidad en Sedes ({{ contarSedesActivas(sucursalesSeleccionadas) }}/{{ sucursalesSeleccionadas.length }}):
+            </label>
+            <div class="branch-quick-actions" *ngIf="esAdminGlobalODueno">
+              <button type="button" class="btn-quick-select" (click)="marcarTodasSedes(true, 'plato')">Todas</button>
+              <button type="button" class="btn-quick-select" (click)="marcarTodasSedes(false, 'plato')">Ninguna</button>
+            </div>
+          </div>
+
+          <!-- Mensaje para administradores de sede local -->
+          <div class="sede-local-notice" *ngIf="!esAdminGlobalODueno">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-notice">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>Solo puedes modificar la disponibilidad de tu sede asignada (<strong>{{ getNombreSucursalActual() }}</strong>). Las demás sedes solo pueden ser gestionadas por el Administrador General o Dueño.</span>
+          </div>
+
+          <div class="branch-cards-grid scrollable-grid">
+            <div *ngFor="let s of sucursalesSeleccionadas" 
+                 class="branch-card-item" 
+                 [class.branch-active]="s.activo"
+                 [class.branch-disabled]="!puedeModificarSede(s.sucursalId)">
+              <div class="branch-card-header">
+                <label class="branch-checkbox-label">
+                  <input type="checkbox" [(ngModel)]="s.activo" [disabled]="!puedeModificarSede(s.sucursalId)" />
+                  <span class="branch-name">{{ s.nombre }}</span>
+                </label>
+                <span class="branch-status-tag" [class.status-tag-on]="s.activo" [class.status-tag-off]="!s.activo">
+                  {{ s.activo ? 'Disponible' : 'Agotado' }}
+                </span>
+              </div>
+              <div class="branch-card-body" *ngIf="s.activo">
+                <label class="branch-sub-checkbox">
+                  <input type="checkbox" [(ngModel)]="s.esMenuDelDia" [disabled]="!puedeModificarSede(s.sucursalId)" />
+                  <span>⭐ Menú del Día en esta sede</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="mostrarModalPlato = false">Cancelar</button>
+        <button class="btn-primary" (click)="guardarPlato()">
+          {{ modoEdicionPlato ? 'Guardar Cambios' : 'Registrar Plato' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: CREAR / EDITAR PROMOCIÓN O COMBO -->
+  <!-- ===================================================================== -->
+  <div class="modal-overlay fade-in" *ngIf="mostrarModalPromo">
+    <div class="glass-modal modal-form-lg">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div>
+            <h3>{{ modoEdicionPromo ? 'Editar Promoción / Combo' : 'Nueva Promoción / Combo' }}</h3>
+            <p class="modal-subtitle">Define combos, selecciona los platos incluidos y fija el descuento.</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" (click)="mostrarModalPromo = false">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>Nombre de la Promoción *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="formPromo.nombre"
+              placeholder="Ej: Combo Familiar Brasero + Gaseosa 1.5L"
+            />
+          </div>
+
+          <div class="form-group flex-1">
+            <label>Precio Promocional (S/) *</label>
+            <input
+              type="number"
+              step="0.50"
+              class="form-control text-price-input"
+              [(ngModel)]="formPromo.precioPromo"
+              (ngModelChange)="recalcularPrecioReferencialPromo()"
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción de la Oferta</label>
+          <textarea
+            class="form-control"
+            rows="2"
+            [(ngModel)]="formPromo.descripcion"
+            placeholder="Indica qué beneficios trae, horarios o restricciones..."
+          ></textarea>
+        </div>
+
+        <!-- SELECTOR DE PLATOS PARA EL COMBO -->
+        <div class="combo-builder-box">
+          <div class="builder-header">
+            <h4>Platos y Productos Incluidos en este Combo</h4>
+            <span class="builder-hint">Agrega los platos que componen este paquete</span>
+          </div>
+
+          <div class="builder-add-row">
+            <select class="form-control" [(ngModel)]="nuevoItemPromoProductoId">
+              <option *ngFor="let p of listaProductos" [value]="p.id">
+                {{ p.nombre }} (S/ {{ p.precio | number:'1.2-2' }})
+              </option>
+            </select>
+            <input
+              type="number"
+              min="1"
+              class="form-control text-center"
+              [(ngModel)]="nuevoItemPromoCantidad"
+              placeholder="Cant."
+            />
+            <button class="btn-add-item-combo" (click)="agregarItemAComboPromo()">
+              + Agregar
+            </button>
+          </div>
+
+          <!-- LISTA DE ITEMS YA AGREGADOS AL COMBO -->
+          <div class="combo-items-list" *ngIf="promoItemsSeleccionados.length > 0">
+            <div class="combo-item-chip" *ngFor="let it of promoItemsSeleccionados; let i = index">
+              <span class="chip-qty">{{ it.cantidad }}x</span>
+              <span class="chip-name">{{ it.nombre }}</span>
+              <button class="btn-remove-chip" (click)="quitarItemDeComboPromo(i)">&times;</button>
+            </div>
+          </div>
+
+          <div class="builder-empty-hint" *ngIf="promoItemsSeleccionados.length === 0">
+            <small>No has agregado ningún plato aún al combo. Selecciona uno arriba y dale "+ Agregar".</small>
+          </div>
+        </div>
+
+        <!-- CÁLCULO DE DESCUENTO AUTOMÁTICO -->
+        <div class="form-row" style="margin-top: 16px;">
+          <div class="form-group flex-1">
+            <label>Precio Regular / Referencial (S/)</label>
+            <div class="auto-calc-input-wrapper">
+              <input
+                type="text"
+                class="form-control"
+                [value]="formPromo.precioOriginal ? ('S/ ' + (formPromo.precioOriginal | number:'1.2-2')) : 'S/ 0.00'"
+                readonly
+                placeholder="S/ 0.00"
+                title="Calculado automáticamente por la suma de los platos incluidos"
+              />
+              <span class="calc-indicator-pill">Suma automática</span>
+            </div>
+          </div>
+
+          <div class="form-group flex-1">
+            <label>% Descuento Calculado</label>
+            <div class="discount-badge-field">
+              <span class="discount-percent-tag">
+                {{ formPromo.descuentoPorcentaje ? formPromo.descuentoPorcentaje + '%' : '0%' }}
+              </span>
+              <small class="discount-label">Ahorro para el cliente</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Fecha Inicio (Opcional)</label>
+            <input type="date" class="form-control" [(ngModel)]="formPromo.fechaInicio" />
+          </div>
+
+          <div class="form-group flex-1">
+            <label>Fecha Fin (Opcional)</label>
+            <input type="date" class="form-control" [(ngModel)]="formPromo.fechaFin" />
+          </div>
+        </div>
+
+        <div class="form-switches-box">
+          <label class="custom-checkbox-row">
+            <input type="checkbox" [(ngModel)]="formPromo.destacado" />
+            <div class="checkbox-label-text">
+              <strong>Promoción Destacada</strong>
+              <p>Mostrar con prioridad en el banner de ofertas del restaurante.</p>
+            </div>
+          </label>
+
+          <label class="custom-checkbox-row">
+            <input type="checkbox" [(ngModel)]="formPromo.activo" />
+            <div class="checkbox-label-text">
+              <strong>Promoción Activa</strong>
+              <p>Si se desmarca, se pausará y no se ofrecerá a las mesas.</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- DISPONIBILIDAD POR SEDE PARA PROMOCIÓN -->
+        <div class="branch-availability-section" *ngIf="sucursalesSeleccionadasPromo && sucursalesSeleccionadasPromo.length > 1">
+          <div class="branch-section-header">
+            <label class="branch-section-title">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs-inline">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              Disponibilidad en Sedes ({{ contarSedesActivas(sucursalesSeleccionadasPromo) }}/{{ sucursalesSeleccionadasPromo.length }}):
+            </label>
+            <div class="branch-quick-actions" *ngIf="esAdminGlobalODueno">
+              <button type="button" class="btn-quick-select" (click)="marcarTodasSedes(true, 'promo')">Todas</button>
+              <button type="button" class="btn-quick-select" (click)="marcarTodasSedes(false, 'promo')">Ninguna</button>
+            </div>
+          </div>
+
+          <!-- Mensaje para administradores de sede local -->
+          <div class="sede-local-notice" *ngIf="!esAdminGlobalODueno">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-notice">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>Solo puedes modificar la disponibilidad de tu sede asignada (<strong>{{ getNombreSucursalActual() }}</strong>). Las demás sedes solo pueden ser gestionadas por el Administrador General o Dueño.</span>
+          </div>
+
+          <div class="branch-cards-grid scrollable-grid">
+            <div *ngFor="let s of sucursalesSeleccionadasPromo" 
+                 class="branch-card-item" 
+                 [class.branch-active]="s.activo"
+                 [class.branch-disabled]="!puedeModificarSede(s.sucursalId)">
+              <div class="branch-card-header">
+                <label class="branch-checkbox-label">
+                  <input type="checkbox" [(ngModel)]="s.activo" [disabled]="!puedeModificarSede(s.sucursalId)" />
+                  <span class="branch-name">{{ s.nombre }}</span>
+                </label>
+                <span class="branch-status-tag" [class.status-tag-on]="s.activo" [class.status-tag-off]="!s.activo">
+                  {{ s.activo ? 'Válida en esta sede' : 'No disponible' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="mostrarModalPromo = false">Cancelar</button>
+        <button class="btn-primary" (click)="guardarPromo()">
+          {{ modoEdicionPromo ? 'Guardar Cambios' : 'Lanzar Promoción' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: CREAR / EDITAR CATEGORÍA (TIPO DE PLATO) -->
+  <!-- ===================================================================== -->
+  <div class="modal-overlay fade-in" *ngIf="mostrarModalCategoria">
+    <div class="glass-modal">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div>
+            <h3>{{ modoEdicionCategoria ? 'Editar Categoría' : 'Nueva Categoría / Tipo' }}</h3>
+            <p class="modal-subtitle">Organiza los platos y determina si se despachan en Cocina o Bar.</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" (click)="mostrarModalCategoria = false">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre de la Categoría *</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="formCategoria.nombre"
+            placeholder="Ej: Pollos a la Brasa, Guarniciones, Bebidas..."
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea
+            class="form-control"
+            rows="2"
+            [(ngModel)]="formCategoria.descripcion"
+            placeholder="Descripción interna o para la carta..."
+          ></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Área de Despacho</label>
+            <select class="form-control" [(ngModel)]="formCategoria.esCocina">
+              <option [ngValue]="true">Cocina (Platos y Comidas)</option>
+              <option [ngValue]="false">Bar / Barra (Bebidas y Cocteles)</option>
+            </select>
+          </div>
+
+          <div class="form-group flex-1">
+            <label>Orden Visual</label>
+            <input
+              type="number"
+              min="1"
+              class="form-control"
+              [(ngModel)]="formCategoria.ordenVisual"
+              placeholder="1"
+            />
+          </div>
+        </div>
+
+        <div class="form-switches-box">
+          <label class="custom-checkbox-row">
+            <input type="checkbox" [(ngModel)]="formCategoria.activo" />
+            <div class="checkbox-label-text">
+              <strong>Categoría Activa</strong>
+              <p>Visible en los filtros y menús de comanda.</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="mostrarModalCategoria = false">Cancelar</button>
+        <button class="btn-primary" (click)="guardarCategoria()">
+          {{ modoEdicionCategoria ? 'Guardar Cambios' : 'Registrar Categoría' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: CREAR / EDITAR INSUMO -->
+  <!-- ===================================================================== -->
+  <div class="modal-overlay fade-in" *ngIf="mostrarModalInsumo">
+    <div class="glass-modal">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div>
+            <h3>{{ modoEdicionInsumo ? 'Editar Insumo' : 'Nuevo Insumo / Ingrediente' }}</h3>
+            <p class="modal-subtitle">Control de existencias y alertas de reposición.</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" (click)="mostrarModalInsumo = false">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>Nombre del Insumo *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="formInsumo.nombre"
+              placeholder="Ej: Pollo Entero, Papa Canchán, Aceite Vegetal..."
+            />
+          </div>
+
+          <div class="form-group flex-1">
+            <label>Unidad de Medida *</label>
+            <select class="form-control" [(ngModel)]="formInsumo.unidadMedida">
+              <option value="kg">kg (Kilogramos)</option>
+              <option value="gr">gr (Gramos)</option>
+              <option value="und">und (Unidades)</option>
+              <option value="lt">lt (Litros)</option>
+              <option value="botella">botella</option>
+              <option value="saco">saco</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Stock Actual</label>
+            <input
+              type="number"
+              step="0.1"
+              class="form-control"
+              [(ngModel)]="formInsumo.stock"
+              placeholder="0"
+            />
+          </div>
+
+          <div class="form-group flex-1">
+            <label>Stock Mínimo (Alerta)</label>
+            <input
+              type="number"
+              step="0.1"
+              class="form-control"
+              [(ngModel)]="formInsumo.stockMinimo"
+              placeholder="5"
+            />
+          </div>
+        </div>
+
+        <div class="form-switches-box">
+          <label class="custom-checkbox-row">
+            <input type="checkbox" [(ngModel)]="formInsumo.activo" />
+            <div class="checkbox-label-text">
+              <strong>Insumo Activo</strong>
+              <p>Disponible para asociar a recetas o consumo.</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="mostrarModalInsumo = false">Cancelar</button>
+        <button class="btn-primary" (click)="guardarInsumo()">
+          {{ modoEdicionInsumo ? 'Guardar Cambios' : 'Registrar Insumo' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: CONFIRMACIÓN DE ELIMINACIÓN -->
+  <!-- ===================================================================== -->
+  <div class="modal-overlay fade-in" *ngIf="mostrarModalConfirmacionEliminar">
+    <div class="glass-modal modal-danger-confirm">
+      <div class="danger-icon-circle">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-lg">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      </div>
+      <div class="danger-text-content">
+        <h3>¿Confirmar Eliminación?</h3>
+        <p>
+          Estás a punto de retirar
+          <strong>"{{ itemAEliminar?.nombre }}"</strong>
+          {{ itemAEliminar?.tipo === 'plato' ? 'de la carta' : 'del catálogo' }}.
+        </p>
+        <small class="danger-subnote">Esta acción no se puede deshacer.</small>
+      </div>
+
+      <div class="modal-footer justify-center">
+        <button class="btn-secondary" (click)="mostrarModalConfirmacionEliminar = false">Cancelar</button>
+        <button class="btn-danger-action" (click)="ejecutarEliminacion()">Sí, Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
